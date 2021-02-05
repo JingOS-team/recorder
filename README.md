@@ -21,8 +21,8 @@ Jing-KRecorder is based on KRecorder [gitlab](https://invent.kde.org/plasma-mobi
 
 ## Links
 - Home: [www.jingos.com](http://www.jingos.com/)
-- Project page: github.com/jingOS-team/jing-krecorder
-- File issues: github.com/jingOS-team/jing-krecorder/issues
+- Project page: [https://github.com/JingOS-team/jing-krecorder](https://github.com/JingOS-team/jing-krecorder)
+- File issues: [https://github.com/JingOS-team/jing-krecorder/issues](https://github.com/JingOS-team/jing-krecorder/issues)
 - Development channel: [www.jingos.com](http://www.jingos.com/)
 
 ## Installing
