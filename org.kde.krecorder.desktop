@@ -5,7 +5,7 @@
 #
 
 [Desktop Entry]
-Name=Recorder
+Name=Voice Memos
 Name[ca]=Enregistrador
 Name[ca@valencia]=Enregistrador
 Name[cs]=Nahrávací zařízení
@@ -50,3 +50,4 @@ Icon=org.kde.krecorder
 Type=Application
 Terminal=false
 Categories=Qt;KDE;
+PanelBehavor=3

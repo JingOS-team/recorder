@@ -1,6 +1,7 @@
 /*
  * SPDX-FileCopyrightText: 2020 Jonah Brüchert <jbb@kaidan.im>
  * SPDX-FileCopyrightText: 2020 Devin Lin <espidev@gmail.com>
+ * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -43,6 +44,20 @@ public:
         emit maxVolumesChanged();
     }
 
+    void setNullDataSize(int m)
+    {
+        m_nullDataSize = m;
+    }
+    void setCurrentIndex(int index) {
+        m_CurrentIndex = index;
+    }
+
+    void setAnimationIndex(int animationIndex)
+    {
+        m_animationIndex = animationIndex;
+        emit animationIndexChanged();
+    }
+
     int animationIndex()
     {
         return m_animationIndex;
@@ -60,11 +75,13 @@ private:
     int m_audioLen = 0; // used for calculating the value of one volume bar from many
     int m_animationIndex = 0; // which index rectangle is being expanded
     int m_maxVolumes = 100; // based on width of screen
+    int m_nullDataSize = 174; // based on width of screen
+    int m_CurrentIndex = 174;
 
     QVariantList m_volumesList;
 
     QTimer* volumeBarTimer;
-    
+
 signals:
     void volumesListChanged();
     void animationIndexChanged();

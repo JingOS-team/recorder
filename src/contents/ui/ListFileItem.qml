@@ -1,0 +1,47 @@
+/*
+ * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+import QtQuick 2.1
+import org.kde.kirigami 2.2
+import QtGraphicalEffects 1.0
+
+Rectangle {
+    id: background
+
+    property int itemRadius
+    property int lineLeftMargin
+    property int defaultIndex
+
+    width: parent.width
+    height: parent.height
+    radius: itemRadius
+    color: lineLeftMargin <= 0 ?  (recordFileList.itemIndex === defaultIndex ? listItem.activeBackgroundColor : listItem.backgroundColor) : (listItem.checked || (listItem.pressed && !listItem.checked && !listItem.sectionDelegate) ? (internal.indicateActiveFocus ? listItem.activeBackgroundColor : Qt.tint(listItem.backgroundColor, Qt.rgba(listItem.activeBackgroundColor.r, listItem.activeBackgroundColor.g, listItem.activeBackgroundColor.b, 0.3))) : listItem.backgroundColor)
+    visible: recordFileList.itemIndex === defaultIndex
+
+    Rectangle {
+        id: internal
+
+        property bool indicateActiveFocus:true
+        readonly property bool _firstElement: typeof(index) !== "undefined" && index == 0
+
+        radius: itemRadius
+        anchors.fill: parent
+        visible: true
+        color: getcolor()
+        opacity: listItem.itemHoverd ? 0.2 : 1.0
+
+        Behavior on opacity { NumberAnimation { duration: Units.longDuration } }
+
+        function getcolor(){
+            var cor =  ( recordFileList.itemIndex === defaultIndex ? listItem.activeBackgroundColor : listItem.backgroundColor)
+            return cor
+        }
+    }
+    Behavior on color {
+        ColorAnimation { duration: Units.longDuration }
+    }
+
+}

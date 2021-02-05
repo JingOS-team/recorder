@@ -5,7 +5,7 @@
 -->
 <component type="desktop-application">
   <id>org.kde.krecorder</id>
-  <name>Recorder</name>
+  <name>Voice Memos</name>
   <name xml:lang="ca">Enregistrador</name>
   <name xml:lang="ca-valencia">Enregistrador</name>
   <name xml:lang="cs">Nahrávací nástroj</name>

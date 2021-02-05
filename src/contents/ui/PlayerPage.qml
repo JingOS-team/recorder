@@ -1,5 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2020 Devin Lin <espidev@gmail.com>
+ * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -9,57 +10,92 @@ import org.kde.kirigami 2.12 as Kirigami
 import QtQuick.Controls 2.2 as Controls
 import QtQuick.Layouts 1.2
 import KRecorder 1.0
+import "commonsize.js" as CSJ
 
-Kirigami.Page {
+Rectangle{
+    id:playPageRect
     
-    property Recording recording
-    
-    title: recording.fileName
-    
-    onBackRequested: AudioPlayer.stop()
-    
-    actions {
-        main: Kirigami.Action {
-            text: AudioPlayer.state === AudioPlayer.PlayingState ? i18n("Pause") : i18n("Play")
-            icon.name: AudioPlayer.state === AudioPlayer.PlayingState ? "media-playback-pause" : "media-playback-start"
-            onTriggered: AudioPlayer.state === AudioPlayer.PlayingState ? AudioPlayer.pause() : AudioPlayer.play()
+    property Recording recording:RecordingModel.firstRecording()
+    property PlayPageTitle ppTitle : playerPageTitle
+
+
+    onRecordingChanged: {
+        playVisualization.setSliderValue(0)
+    }
+
+    Connections {
+        target: RecordingModel
+
+        onInsertNewRecordFile:{
+            playPageRect.recording = RecordingModel.firstRecording()
         }
-        right: Kirigami.Action {
-            visible: AudioPlayer.state !== AudioPlayer.StoppedState
-            text: i18n("Stop")
-            icon.name: "media-playback-stop"
-            onTriggered: AudioPlayer.stop();
+        function onError(error) {
+            console.warn("Error on the recorder", error)
         }
     }
-    
-    ColumnLayout {
-        anchors.fill: parent
-        
-        Controls.Label {
-            id: timeText
-            Layout.alignment: Qt.AlignHCenter
-            text: AudioPlayer.state === AudioPlayer.StoppedState ? "00:00:00" : Utils.formatTime(AudioPlayer.position)
-            font.pointSize: Kirigami.Theme.defaultFont.pointSize * 3
-        }           
-        
-        Visualization {
-            Layout.fillWidth: true
-            
-            showLine: false
-            height: Kirigami.Units.gridUnit * 15
-            maxBarHeight: Kirigami.Units.gridUnit * 5
-            animationIndex: AudioPlayer.prober.animationIndex
-        
-            volumes: AudioPlayer.prober.volumesList
+
+    function setFileName(){
+        if(recording.fileName !== playerPageTitle.textChangeContent){
+            recording.fileName = playerPageTitle.textChangeContent
         }
-        
-        Controls.Slider {
-            Layout.alignment: Qt.AlignHCenter
-            from: 0
-            to: AudioPlayer.duration
-            value: AudioPlayer.position
-            
-            onMoved: AudioPlayer.setPosition(value)
+    }
+
+    PlayPageTitle{
+        id:playerPageTitle
+
+        anchors{
+            top: parent.top
+            topMargin: 20
+        }
+        titleContent: recording.fileName
+        dateContent: recording.recordDate
+        lengthContent: recording.recordingLength
+        currentDateContent: AudioPlayer.state === AudioPlayer.StoppedState ? "00:00:00" : Utils.formatTime(Math.round(AudioPlayer.position/1000)*1000)
+        onRenameClicked: {
+            if(isFileNameEdit){
+                recording.fileName = newFileName
+            }
+        }
+    }
+
+    Visualization {
+        id:playVisualization
+
+        anchors{
+            left: palypageBottom.left
+            right: palypageBottom.right
+            top: playerPageTitle.bottom
+            bottom: palypageBottom.top
+
+        }
+        width: parent.width
+        height: playPageRect.height- playerPageTitle.height - palypageBottom.height
+        Layout.fillWidth: false
+        isListMove: true
+        audiouiColor:"#FFAF0A"
+        centerLienColor:"#FF9500"
+        showLine: false
+        showHorizontalLine:true
+        currentFliickableX: recording.recordingLength
+        maxBarHeight: height/2
+        animationIndex: AudioPlayer.prober.animationInde
+        volumes: AudioPlayer.prober.volumesList
+        isPlayPage: true
+    }
+
+    onVisibleChanged: {
+        playVisualization.playPageIsVisible = visible;
+    }
+
+    PlayPageBottom{
+        id:palypageBottom
+        isPlayPage: true
+        color: "#00000000"
+        defaultSource : playSource
+        anchors.bottom: parent.bottom
+        onPlayClicked: {
+            AudioPlayer.stop()
+            pageStack.layers.push("qrc:/RecordPage.qml",{currentVX:0});
         }
     }
 }

@@ -11,7 +11,6 @@
 #include <QString>
 #include <QMultimedia>
 #include <QCoreApplication>
-
 #include <audiorecorder.h>
 
 class SettingsModel;

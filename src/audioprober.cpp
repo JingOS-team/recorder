@@ -1,6 +1,7 @@
 /*
  * SPDX-FileCopyrightText: 2020 Jonah Brüchert <jbb@kaidan.im>
  * SPDX-FileCopyrightText: 2020 Devin Lin <espidev@gmail.com>
+ * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -13,19 +14,22 @@ AudioProber::AudioProber(QObject *parent) : QAudioProbe(parent)
 {
     connect(this, &AudioProber::audioBufferProbed, this, &AudioProber::process);
     m_volumesList.append(0);
-    
-    // loop to add volume bars 
+
+    // loop to add volume bars
     volumeBarTimer = new QTimer(this);
-    connect(volumeBarTimer, &QTimer::timeout, this, &AudioProber::processVolumeBar);
-    volumeBarTimer->start(150);
 }
 
-void AudioProber::processVolumeBar() 
+void AudioProber::processVolumeBar()
 {
+    if (m_volumesList.size() <= 1) {
+        for (int i =0; i< 20000; i++ ) {
+            m_volumesList.append(10000);
+        }
+    }
     if (m_audioLen != 0) {
         const int val = m_audioSum / m_audioLen;
-
-        m_volumesList.append(val);
+        m_volumesList.insert(m_CurrentIndex,val);
+        m_CurrentIndex++;
 
         if (m_volumesList.count() > m_maxVolumes) {
             m_volumesList.removeFirst();
@@ -48,7 +52,7 @@ void AudioProber::processVolumeBar()
     }
 }
 
-void AudioProber::process(QAudioBuffer buffer) 
+void AudioProber::process(QAudioBuffer buffer)
 {
     int sum = 0;
     for (int i = 0; i < buffer.sampleCount(); i++) {
@@ -59,7 +63,7 @@ void AudioProber::process(QAudioBuffer buffer)
 
     if (sum > MAX_VOLUME)
         sum = MAX_VOLUME;
-    
+
     m_audioSum += sum;
     m_audioLen++;
 }

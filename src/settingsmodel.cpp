@@ -6,11 +6,11 @@
 
 #include "settingsmodel.h"
 
-SettingsModel::SettingsModel(QObject *parent) : 
+SettingsModel::SettingsModel(QObject *parent) :
     QObject(parent)
 {
     settings = new QSettings();
-    
+
     setAudioCodec(audioCodec());
     setContainerFormat(containerFormat());
     setAudioQuality(audioQuality());
@@ -65,7 +65,7 @@ void SettingsModel::setContainerFormat(const QString &audioContainerFormat)
 {
     AudioRecorder::instance()->setContainerFormat(audioContainerFormat);
     settings->setValue("General/containerFormat", audioContainerFormat);
-    
+
     emit containerFormatChanged();
     emit simpleAudioFormatChanged();
 }
@@ -80,8 +80,12 @@ void SettingsModel::setAudioQuality(int audioQuality)
     QAudioEncoderSettings s = AudioRecorder::instance()->audioSettings();
     s.setQuality(static_cast<QMultimedia::EncodingQuality>(audioQuality));
     AudioRecorder::instance()->setAudioSettings(s);
-    
+    int sampleRate = s.sampleRate();
+    QString codec = s.codec();
+    int count = s.channelCount();
+//    qDebug()<<"zhg - cpp---------audioSettings:"<<sampleRate << " codec:"<<codec
+//           <<" channelcount:"<< count;
     settings->setValue("General/audioQuality", audioQuality);
-    
+
     emit audioQualityChanged();
 }
