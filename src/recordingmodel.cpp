@@ -20,6 +20,7 @@
 #include "taglib/fileref.h"
 #include "utils.h"
 #include <QException>
+#include <QDBusError>
 
 const QString DEF_RECORD_PREFIX = "clip";
 
@@ -58,6 +59,35 @@ QJsonObject Recording::toJson() const
     return obj;
 }
 
+QString Recording::recordDatePretty() const
+{
+    QString dateString;
+    QDateTime currentDate =  QDateTime::currentDateTime();
+    int dayoffset = m_recordDate.daysTo(currentDate);
+    bool getLocalTimeIs24 = RecordingModel::instance()->is24HourFormat();
+    QString currentDayString = getLocalTimeIs24 ? "hh:mm" : (QLatin1String("hh:mm") + " AP");
+
+    if (dayoffset <= 7) {
+        if (dayoffset < 1) {
+            dateString = m_recordDate.toString(currentDayString);
+        } else if (dayoffset == 1) {
+            dateString = i18n("yestday ")+ m_recordDate.toString(currentDayString);
+        } else {
+            dateString =  m_recordDate.toString("dddd " + currentDayString);
+        }
+    } else {
+        int currentYear = currentDate.date().year();
+        int dataYear = m_recordDate.date().year();
+        if (currentYear == dataYear) {
+            dateString = m_recordDate.toString("MM-dd " + currentDayString);
+        } else {
+            dateString = m_recordDate.toString("yyyy-MM-dd " + currentDayString);
+        }
+
+    }
+    return dateString;
+}
+
 QString Recording::recordingLengthPretty() const
 {
     const int hours = m_recordingLength / 60 / 60;
@@ -88,12 +118,30 @@ void Recording::setFilePath(const QString &filePath)
 
 void Recording::setFileName(const QString &fileName)
 {
-    QString oldPath = m_filePath;
-
-    m_filePath.replace(QRegExp(m_fileName + "(?!.*" + m_fileName + ")"), fileName);
-    QFile(oldPath).rename(m_filePath);
-
-    m_fileName = fileName;
+    if (fileName == "") {
+        emit RecordingModel::instance()->showTipText(i18n("The file name cannot be empty."));
+    } else if (fileName != m_fileName) {
+        if ((fileName.indexOf("#") != -1)
+                || (fileName.indexOf("/") != -1)
+                || (fileName.indexOf("?") != -1))
+        {
+            emit RecordingModel::instance()->showTipText(i18n("The file name cannot contain the following characters # / ?"));
+        } else if (fileName.startsWith("."))
+        {
+            emit RecordingModel::instance()->showTipText(i18n("Cannot start with a symbol as a file name"));
+        } else {
+            QString newPath = m_filePath;
+            newPath.replace(QRegExp(m_fileName + "(?!.*" + m_fileName + ")"), fileName);
+            QFileInfo check(newPath);
+            if (!check.exists()) {
+                QFile(m_filePath).rename(newPath);
+                m_fileName = fileName;
+                m_filePath = newPath;
+            } else {
+                emit RecordingModel::instance()->showTipText(i18n("The current file name is in use. Please rename it."));
+            }
+        }
+    }
     emit propertyChanged();
 }
 
@@ -205,6 +253,25 @@ void RecordingTag::setTagDate(const QString &date)
 RecordingModel::RecordingModel(QObject *parent) : QAbstractListModel(parent)
 {
     m_settings = new QSettings(parent);
+    bool isConnect = QDBusConnection::sessionBus().connect(QString(), QString("/org/kde/kcmshell_clock"),
+                     QString("org.kde.kcmshell_clock"), QString("clockUpdated"), this,
+                     SLOT(kcmClockUpdated()));
+
+    m_currentLocalTime = getCurrentFormat();
+    KSharedConfig::Ptr m_localeConfig = KSharedConfig::openConfig(QStringLiteral("kdeglobals"), KConfig::FullConfig);
+    KConfigWatcher::Ptr m_localeConfigWatcher = KConfigWatcher::create(m_localeConfig);
+    // watch for changes to locale config, to update 12/24 hour time
+    bool dirWatcherConnect = connect(m_localeConfigWatcher.data(), &KConfigWatcher::configChanged,
+    this, [this](const KConfigGroup &group, const QByteArrayList &names) {
+        if (group.name() == "Locale") {
+            load();
+        }
+    });
+
+    QString path =  QStandardPaths::writableLocation(QStandardPaths::MusicLocation);
+    KDirWatch::self()->removeDir(path);
+    KDirWatch::self()->addDir(path, KDirWatch::WatchSubDirs);
+    bool isRC =QObject::connect(KDirWatch::self(), &KDirWatch::dirty, this, &RecordingModel::recordDirChanged);
     load();
 }
 
@@ -238,6 +305,9 @@ QJsonArray RecordingModel::loadFromFiles()
             QString filePath = file.filePath();
             int size = file.size();
             int duration =  getAudioTime(filePath);
+            if (duration == 0) {
+                continue;
+            }
             QJsonObject obj;
             obj["filePath"] = filePath;
             obj["fileName"] = fileName;
@@ -254,7 +324,7 @@ qint64 RecordingModel::getAudioTime(const QString &filePath)
 {
     TagLib::FileRef *fileRef  = new TagLib::FileRef(TagLib::FileName(filePath.toUtf8()));
     if (fileRef->audioProperties()) {
-        int duration =  fileRef->audioProperties()->length();
+        int duration =  (fileRef->audioProperties()->lengthInMilliseconds() + 500)/1000;
         return duration;
     }
     return 0;
@@ -274,6 +344,15 @@ int RecordingModel::getPcmDB( char *pcmdata, int size)
         db = (int)(20.0*log10(sum));
     }
     return db;
+}
+
+void RecordingModel::recordDirChanged(const QString &path)
+{
+    if (!m_isForeground) {
+        beginResetModel();
+        load();
+        endResetModel();
+    }
 }
 
 void RecordingModel::load()
@@ -309,14 +388,16 @@ bool RecordingModel::deleteAllCheck()
     for (int i = 0; i < m_recordings.size(); i++ ) {
         Recording* item = m_recordings.at(i);
         if (item->itemChecked()) {
-            needDeletedRecordings.append(item);
+            deleteRecording(i);
+            //            needDeletedRecordings.insert(i,item);
+            deleteAllCheck();
         }
     }
-    beginResetModel();
-    foreach (auto item,needDeletedRecordings) {
-        deleteRecordingByItem(item);
-    }
-    endResetModel();
+    //    beginResetModel();
+    //    foreach (auto item,needDeletedRecordings) {
+    //        deleteRecordingByItem(item);
+    //    }
+    //    endResetModel();
     return true;
 }
 
@@ -435,7 +516,15 @@ QString RecordingModel::nextDefaultRecordingName()
 
 void RecordingModel::insertRecording(QString filePath, QString fileName, QDateTime recordDate, int recordingLength)
 {
-    if (m_searchContent.isEmpty() || fileName.contains(m_searchContent)) {
+
+    QString updateTime =  getCurrentFormat();
+    if (updateTime != m_currentLocalTime) {
+        beginResetModel();
+        load();
+        endResetModel();
+        m_currentLocalTime = updateTime;
+        emit insertNewRecordFile();
+    } else if (m_searchContent.isEmpty() || fileName.contains(m_searchContent)) {
         beginInsertRows({}, 0, 0);
         Recording *rd = new Recording(this, filePath, fileName, recordDate, recordingLength);
         m_recordings.insert(0,rd);
@@ -476,12 +565,36 @@ void RecordingModel::removeTags(int index)
 
 void RecordingModel::deleteRecordingByItem(Recording* item)
 {
-    qDebug() << "deleteRecordingByItem recording " << item->filePath();
     QFile::remove(item->filePath());
     m_recordings.removeOne(item);
 
     if (m_settings->contains(item->fileName())) {
         m_settings->remove(item->fileName());
+    }
+}
+
+bool RecordingModel::is24HourFormat()
+{
+    return (getCurrentFormat() == FORMAT24H);
+}
+
+QString RecordingModel::getCurrentFormat()
+{
+    KSharedConfig::Ptr  m_localeConfig = KSharedConfig::openConfig(QStringLiteral("kdeglobals"), KConfig::FullConfig);
+    KConfigGroup  m_localeSettings = KConfigGroup(m_localeConfig, "Locale");
+
+    return m_localeSettings.readEntry("TimeFormat", QStringLiteral(FORMAT24H));
+}
+
+void RecordingModel::kcmClockUpdated()
+{
+    QString updateTime =  getCurrentFormat();
+    if (updateTime != m_currentLocalTime) {
+        beginResetModel();
+        load();
+        endResetModel();
+        m_currentLocalTime = updateTime;
+        emit insertNewRecordFile();
     }
 }
 

@@ -14,6 +14,7 @@ Rectangle {
     property int itemRadius
     property int lineLeftMargin
     property int defaultIndex
+    property int colorDuration : 50
 
     width: parent.width
     height: parent.height
@@ -33,7 +34,7 @@ Rectangle {
         color: getcolor()
         opacity: listItem.itemHoverd ? 0.2 : 1.0
 
-        Behavior on opacity { NumberAnimation { duration: Units.longDuration } }
+        Behavior on opacity { NumberAnimation { duration: colorDuration } }
 
         function getcolor(){
             var cor =  ( recordFileList.itemIndex === defaultIndex ? listItem.activeBackgroundColor : listItem.backgroundColor)
@@ -41,7 +42,7 @@ Rectangle {
         }
     }
     Behavior on color {
-        ColorAnimation { duration: Units.longDuration }
+        ColorAnimation { duration: colorDuration }
     }
 
 }

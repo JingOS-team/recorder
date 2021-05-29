@@ -23,6 +23,7 @@ Rectangle {
     property int leftItemCount: leftView.itemCount
 
     signal itemClicked(var recording)
+    signal insertRecordItem(var recording)
     signal itemLongClicked()
     signal recordImageClicked
     signal deleteClicked(var index)
@@ -45,17 +46,19 @@ Rectangle {
         leftView.isCheckboxShow = false
         leftView.cancelAllChecked()
     }
-
     PageTitle{
         id:leftTitleView
 
         anchors{
             top: parent.top
-            topMargin: 20
+            left: parent.left
+            leftMargin: 6 * lastAppScaleSize
+            right: parent.right
+            rightMargin: 6 * lastAppScaleSize
         }
         height: titleHeight
         editTextContent:itemSelectCount
-        titleText: "Sound Recording"
+        titleText: i18n("Voice Memos")
 
         onEditClicked: {
             if(AudioPlayer.state === AudioPlayer.PlayingState){
@@ -71,7 +74,9 @@ Rectangle {
             leftView.selectAllChecked(status);
         }
         onDeleteClicked: {
-            deletCheckDialog.open()
+            if(itemSelectCount > 0){
+                deletCheckDialog.open()
+            }
         }
 
     }
@@ -86,10 +91,17 @@ Rectangle {
         }
         onDialogRightClicked: {
             RecordingModel.deleteAllCheck();
+            if (leftItemCount !== itemSelectCount) {
+                rightViewPlayer.recording = RecordingModel.firstRecording()
+            } else {
+                AudioPlayer.setMediaPath("")
+                AudioPlayer.stop()
+                rightViewPlayer.recording = null
+            }
             itemSelectCount = 0
             deletCheckDialog.close()
             checkBoxHide()
-            rightViewPlayer.recording = RecordingModel.firstRecording()
+
         }
     }
 
@@ -99,11 +111,9 @@ Rectangle {
         anchors{
             bottom: parent.bottom
             top: leftTitleView.bottom
-            topMargin: 15
+            topMargin: 16 * appScaleSize
             right: parent.right
-            rightMargin: 19
             left: parent.left
-            leftMargin: 19
         }
         width:parent.width
 
@@ -122,25 +132,60 @@ Rectangle {
     }
 
 
-    Image {
-        id: bottomImage
+    Rectangle{
+     id:nullRect
+     x:parent.width/2 - width / 2
+     y:root.height / 2 - height/2
+     color: "transparent"
+     visible: leftItemCount <= 0
+     width: nullTipText.contentWidth
+     height: nullImage.height + nullTipText.height
+     Image {
+         id: nullImage
 
-        anchors{
-            horizontalCenter: parent.horizontalCenter
-            bottom: parent.bottom
-            margins: parent.height * (CSJ.LeftView.left_bottom_parent_margin/CSJ.ScreenCurrentHeight)
-        }
-        width: height
-        height:parent.height *(CSJ.LeftView.left_bottom_record_image_height / CSJ.ScreenCurrentHeight)
-        visible: false
-        source: "qrc:/assets/record.png"
-
-        MouseArea{
-            anchors.fill: parent
-            onClicked: {
-                leftAllView.recordImageClicked()
-            }
-        }
+         anchors{
+             horizontalCenter: nullTipText.horizontalCenter
+         }
+         width: height
+         height: 60 //* lastAppScaleSize
+//         sourceSize: Qt.size(width,height)
+         source: "qrc:/assets/null_recorderfile.png"
+     }
+     Text {
+         id: nullTipText
+         anchors{
+             top: nullImage.bottom
+             topMargin: 15 * lastAppScaleSize
+             horizontalCenter: parent.horizontalCenter
+             }
+         text: i18n("There is no recording \n at present")
+         wrapMode: Text.WordWrap
+         horizontalAlignment: Text.AlignHCenter
+         font.pixelSize: defaultFontSize
+         //black #4DFFFFFF
+         color: "#4D3C3F48"
+     }
     }
+
+//    Image {
+//        id: bottomImage
+
+//        anchors{
+//            horizontalCenter: parent.horizontalCenter
+//            bottom: parent.bottom
+//            margins: parent.height * (CSJ.LeftView.left_bottom_parent_margin/CSJ.ScreenCurrentHeight)
+//        }
+//        width: height
+//        height:parent.height *(CSJ.LeftView.left_bottom_record_image_height / CSJ.ScreenCurrentHeight)
+//        visible: false
+//        source: "qrc:/assets/record.png"
+
+//        MouseArea{
+//            anchors.fill: parent
+//            onClicked: {
+//                leftAllView.recordImageClicked()
+//            }
+//        }
+//    }
 
 }

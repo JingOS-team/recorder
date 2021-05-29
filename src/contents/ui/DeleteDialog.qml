@@ -16,16 +16,16 @@ Kirigami.JDialog{
     property var titleContent
     property int selectCount
     property var msgContent:selectCount > 1 ? filesContent :fileContent
-    property var fileContent:"Are you sure you want to delete this recording?"
-    property var filesContent:"Are you sure you want to delete these recordings?"
+    property var fileContent:i18n("Are you sure you want to delete this recording?")
+    property var filesContent:i18n("Are you sure you want to delete these recordings?")
 
     signal dialogRightClicked
     signal dialogLeftClicked
 
-    title: "Delete"
+    title: i18n("Delete")
     text: msgContent
-    rightButtonText: qsTr("Delete")
-    leftButtonText: qsTr("Cancel")
+    rightButtonText: i18n("Delete")
+    leftButtonText: i18n("Cancel")
 
     onRightButtonClicked:{
         dialogRightClicked()

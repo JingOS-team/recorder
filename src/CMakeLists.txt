@@ -41,8 +41,11 @@ target_link_libraries(krecorder
     Qt5::Multimedia 
     KF5::I18n
     KF5::ConfigGui
+    KF5::CoreAddons
     Qt5::QuickControls2
+    Qt5::DBus
     tag
+    KF5::ConfigCore
 )
 
 install(TARGETS krecorder ${KF5_INSTALL_TARGETS_DEFAULT_ARGS})

@@ -103,10 +103,8 @@ public:
 
     void renameCurrentRecording();
 
-    Q_INVOKABLE void setRecordingName(const QString &rName)
-    {
-        recordingName = rName;
-    }
+    Q_INVOKABLE bool setRecordingName(const QString &rName);
+    Q_INVOKABLE QString getRecordingName(QString defaultName);
 
 private:
     QString m_currentTime;
