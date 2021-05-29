@@ -20,11 +20,13 @@ Controls.CheckBox{
     style: CheckBoxStyle {
         indicator: Rectangle {
             color: "transparent"
-            implicitWidth: itemCheckBox.width
-            implicitHeight: itemCheckBox.width
+            width: itemCheckBox.width
+            height: itemCheckBox.width
             radius:radiusCB
             Image {
-                sourceSize: Qt.size(itemCheckBox.width,itemCheckBox.height)
+                width: itemCheckBox.width
+                height: itemCheckBox.width
+//                sourceSize: Qt.size(44,44)
                 source: control.checked ? "qrc:/assets/checkbox_ok.png":imageSourceDefault
             }
         }

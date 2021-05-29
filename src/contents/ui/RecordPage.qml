@@ -22,25 +22,83 @@ Rectangle {
     property bool isRecording: AudioRecorder.state === AudioRecorder.RecordingState
     property int parentHeight:rightPage.height
     property int currentVX
+    property var recordTimeLength : 0
+    property var appScaleSize : width / 1920
+    property var lastAppScaleSize: width / 888
 
-    color: "#B3000000"
+//    color: "#B3000000"
+    //black 1C1C21
+    color: "#E8EFFF"
+
+    ToastView{
+        id:toastShow
+        toastItem: rightPage
+    }
+
+    function showToast(tips)
+     {
+         toastShow.toastContent = tips
+         toastShow.x = (rightPage.width - toastShow.width) / 2
+         toastShow.y = rightPage.height / 4 * 3
+         toastShow.visible = true
+     }
 
     PlayPageTitle{
         id:recordPageTitle
+        property var defaultFileName: getRecordDefaultFileName()
+        property var cacheDefaultFileName
 
-        titleContent: "Record"
+
+        function getRecordDefaultFileName(){
+            cacheDefaultFileName = AudioRecorder.getRecordingName(i18n("New Recordings"))
+            return cacheDefaultFileName
+        }
+        anchors{
+         top: parent.top
+         topMargin: 20
+        }
+
+        titleContent: defaultFileName
         dateContent: AudioRecorder.currentTime
         currentDateContent: getCurrentDateContent()
         function getCurrentDateContent(){
-            return  isStopped ? "00:00:00" : Utils.formatTime(AudioRecorder.duration)
+            return  isStopped ? "00:00:00" : Utils.formatTime(vzAudioView.currentRecordTime)
         }
         onRenameClicked: {
+
+            if((newFileName.indexOf("#") !== -1)
+                    || (newFileName.indexOf("/") !== -1)
+                    || (newFileName.indexOf("?") !== -1))
+            {
+                newFileName = cacheDefaultFileName
+                showToast(i18n("The file name cannot contain the following characters # / ?"))
+            }else if(newFileName.startsWith("."))
+            {
+                newFileName = cacheDefaultFileName
+                showToast(i18n("Cannot start with a symbol as a file name"))
+            } else if (newFileName === ""){
+                newFileName = cacheDefaultFileName
+                showToast(i18n("The file name cannot be empty."))
+            }
+            var fileExists = AudioRecorder.setRecordingName(recordPageTitle.textChangeContent);
+            if(fileExists){
+                newFileName = cacheDefaultFileName
+                showToast(i18n("The current file name is in use. Please rename it."))
+            }
             if(isFileNameEdit){
                 titleContent = newFileName
             }
         }
-
     }
+
+//    Timer{
+//        interval: 1000
+//        repeat: true
+//        running: AudioRecorder.state == AudioRecorder.RecordingState
+//        onTriggered: {
+//            recordTimeLength += 1000
+//        }
+//    }
 
     Connections {
         target: AudioRecorder
@@ -80,11 +138,11 @@ Rectangle {
 
         anchors{
             bottom: parent.bottom
-            bottomMargin:parent.height/10
+            bottomMargin:29 * lastAppScaleSize
         }
         isPlayPage: false
         isAnimImage: AudioRecorder.state === AudioRecorder.RecordingState
-        defaultSource: (isStopped || isPaused) ? playSource  : pauseSource
+        defaultSource: (isStopped || isPaused) ? playSource  : whitePauseSource
         onPlayClicked: {
             stopRecordingPlay()
             if(isStopped || isPaused) {
@@ -107,14 +165,20 @@ Rectangle {
             vzAudioView.isRecordPlay = true
         }
         onDoneClicked: {
-            AudioRecorder.setRecordingName(recordPageTitle.textChangeContent);
             if(AudioRecorder.state === AudioRecorder.RecordingState){
                 AudioRecorder.pause();
             }
-            stopRecordingPlay();
-
-            AudioRecorder.stop();
-            pageStack.layers.pop();
+            var fileExists = AudioRecorder.setRecordingName(recordPageTitle.textChangeContent);
+            if(!fileExists){
+                stopRecordingPlay();
+                AudioRecorder.stop();
+//                pageStack.layers.pop();
+                mainStackView.pop()
+            } else {
+                recordPageTitle.renamePlayPageTitle(true)
+                recordPageTitle.titleContent = recordPageTitle.cacheDefaultFileName
+                showToast(i18n("The current file name is in use. Please rename it."))
+            }
         }
         onContinueClicked: {
             RecordingModel.addTags(recordPageTitle.titleContent,recordPageTitle.currentDateContent)
@@ -123,6 +187,7 @@ Rectangle {
     }
 
     Component.onCompleted: {
+        recordTimeLength = 0
         if(isStopped || isPaused) {
             AudioRecorder.record()
         }

@@ -30,6 +30,8 @@ AudioRecorder::AudioRecorder(QObject *parent) : QAudioRecorder(parent)
     emit audioCodecChanged();
 
     QQmlEngine::setObjectOwnership(m_audioProbe, QQmlEngine::CppOwnership);
+//    QString defaultName =  QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/" + getRecordingName("test");
+//    setOutputLocation(defaultName);
 
     // once the file is done writing, save recording to model
     connect(this, &QAudioRecorder::stateChanged, this, &AudioRecorder::handleStateChange);
@@ -71,10 +73,53 @@ void AudioRecorder::handleStateChange(QAudioRecorder::State state)
     } else if (state == QAudioRecorder::PausedState) {
         cachedDuration = duration();
     } else if ( state == QAudioRecorder::RecordingState) {
-        m_currentTime = QDateTime::currentDateTime().toString("hh:mm AP");
+        bool getLocalTimeIs24 = RecordingModel::instance()->is24HourFormat();
+        QString currentDayString = getLocalTimeIs24 ? "hh:mm" : (QLatin1String("hh:mm") + " AP");
+
+        m_currentTime = QDateTime::currentDateTime().toString(currentDayString);
         emit currentDateChanged();
     }
 }
+
+bool AudioRecorder::setRecordingName(const QString &rName)
+{
+    QStringList spl =outputLocation().fileName().split(".");
+    QString suffix = spl.size() > 0 ? "." + spl[spl.size()-1] : "";
+    QString path = QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/" + rName;
+    QString updatedPath = path + suffix;
+
+    // ignore if the file destination is the same as the one currently being written to
+    QFileInfo check(updatedPath);
+    if (check.exists()) {
+        return true;
+    } else {
+        recordingName = rName;
+        return false;
+    }
+}
+
+QString AudioRecorder::getRecordingName(QString dName)
+{
+    QString suffix = ".wav";
+    QString path = QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/" + dName;
+    QString updatedPath = path + suffix;
+    QString newFileName;
+
+    int cur = 1;
+    QFileInfo check(updatedPath);
+    if (check.exists()) {
+        while (check.exists()) {
+            updatedPath = QString("%1_%2%3").arg(path, QString::number(cur), suffix);
+            check = QFileInfo(updatedPath);
+            cur++;
+        }
+        newFileName = QString("%1_%2").arg(dName, QString::number((cur != 1 ? (cur-1) : 1)));
+    } else {
+        newFileName = dName;
+    }
+    return newFileName;
+}
+
 void AudioRecorder::renameCurrentRecording()
 {
     if (!recordingName.isEmpty()) {
@@ -116,12 +161,12 @@ QString AudioRecorder::getFilePath()
         if (outputLocationPath().toString() != "") {
             setOutputLocation(outputLocationPath());
         }
-        recordPlayPath = QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/recordPlay"+ suffix;
-        QString   cFilePath = QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/copyPlay"+ suffix;
+        recordPlayPath = QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/.recordPlay"+ suffix;
+//        QString   cFilePath = QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/copyPlay"+ suffix;
 
         if ( QFile::exists(recordPlayPath)) {
             QFile::remove(recordPlayPath);
-            QFile::remove(cFilePath);
+//            QFile::remove(cFilePath);
         }
         QFile newFile(recordPlayPath);
         if (newFile.open(QIODevice::ReadWrite)) {
@@ -161,5 +206,5 @@ void AudioRecorder::saveRecording()
     QStringList spl = savedPath.split("/");
     QString fileName = spl.at(spl.size()-1).split(".")[0];
 
-    RecordingModel::instance()->insertRecording(savedPath, fileName, QDateTime::currentDateTime(), cachedDuration / 1000);
+    RecordingModel::instance()->insertRecording(savedPath, fileName, QDateTime::currentDateTime(), (cachedDuration + 500) / 1000);
 }

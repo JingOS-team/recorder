@@ -12,7 +12,6 @@ import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.15
 import KRecorder 1.0
 import "commonsize.js" as CSJ
-import QtQuick.Particles 2.0
 import org.kde.kirigami 2.15
 
 Item {
@@ -27,7 +26,7 @@ Item {
     property bool isListMove: false
     property var audiouiColor: "#FFFFFF"
     property var centerLienColor: "#E95B4E"
-    property int currentFliickableX
+    property var currentFliickableX
     property bool isPlayPage: true
     property bool isRecordPlay: false
     property bool isStartPlayRecord: false
@@ -36,6 +35,8 @@ Item {
     property int position: isPlayPage ? AudioPlayer.position : AudioRecorder.duration
     property int vzMovePosition
     property bool isVzMove
+    property alias currentRecordTime: newtimeLine.lastPosition
+    property alias slideValue: sliderView.value
 
     signal playRecordingData
 
@@ -91,7 +92,7 @@ Item {
                     centerIn: pRImage
                 }
                 width: height
-                height: root.height * 3 / 8
+                height: 255 * lastAppScaleSize
                 rAnimationRunning: isPlayPage
                                    || isRecordPlay ? AudioPlayer.state == AudioPlayer.PlayingState : emitRect.isRecordPlay
                 wave_color: isPlayPage || isRecordPlay ? "white" : "#E95B4E"
@@ -103,7 +104,9 @@ Item {
 
                 anchors.centerIn: parent
                 visible: isPlayPage || isRecordPlay
-                sourceSize: Qt.size(64, 64)
+                width: 37 * lastAppScaleSize
+                height: width
+                sourceSize: Qt.size(110, 110)
                 source: AudioPlayer.state === AudioPlayer.PlayingState ? "qrc:/assets/pause.png" : "qrc:/assets/play.png"
 
                 JMouseSolid {
@@ -120,8 +123,9 @@ Item {
                                     && !playTimer.running) {
                                 playTimer.start()
                             }
-                            if (!isPlayPage) {
+                            if (!isPlayPage && isVzMove) {
                                 AudioPlayer.setPosition(vzMovePosition)
+                                isVzMove = false
                             }
                             isStartPlayRecord = true
                         }
@@ -135,14 +139,13 @@ Item {
 
             anchors {
                 bottom: allRect.bottom
-                bottomMargin: allRect.height / 10
             }
             width: parent.width
             height: 40
             visible: !isPlayPage
             lineFixed: visualization.width
             color: "#00000000"
-            models: 60 * 60 * 1000
+            models: 5 * 60 * 60 * 1000
 
             onLineMoved: {
                 vzMovePosition = movePt
@@ -159,7 +162,7 @@ Item {
             width: parent.width
             height: 1
             visible: !isPlayPage
-            color: "#FFFFFF"
+            color: "#993C3F48"
         }
 
         Rectangle {
@@ -177,6 +180,7 @@ Item {
             id: sliderView
 
             property int playPosition
+            property bool isPlayingPress
 
             anchors {
                 bottom: allRect.bottom
@@ -187,6 +191,27 @@ Item {
             from: 0
             to: AudioPlayer.duration
 
+            onPressedChanged: {
+                if(pressed){
+                    isPlayingPress = AudioPlayer.state == AudioPlayer.PlayingState
+                    if (isPlayingPress) {
+                        AudioPlayer.pause()
+                        if (isPlayPage && playPageIsVisible
+                                && playTimer.running) {
+                            playTimer.stop()
+                        }
+                    }
+                } else {
+                    if(isPlayingPress){
+                        AudioPlayer.play()
+                        if (isPlayPage && playPageIsVisible
+                                && !playTimer.running) {
+                            playTimer.start()
+                        }
+                    }
+                }
+            }
+
             background: Rectangle {
                 width: sliderView.availableWidth
                 height: implicitHeight
@@ -195,7 +220,8 @@ Item {
                 implicitWidth: parent.width
                 implicitHeight: 2
                 radius: 2
-                color: "#ECE8E8"
+                //black ECE8E8
+                color: "#993C3F48"
 
                 Rectangle {
                     width: sliderView.visualPosition * parent.width
@@ -213,27 +239,27 @@ Item {
                 border.width: 0
                 implicitWidth: CSJ.PlayPageView.playage_middle_middel_line_width
                 implicitHeight: CSJ.PlayPageView.playage_middle_middle_line_height
-                radius: height / 2
+                radius: 4 * lastAppScaleSize
             }
 
-            Timer {
-                id: playTimer
-                interval: 15
-                repeat: true
-                onTriggered: {
-                    sliderView.value = AudioPlayer.position
-                    if (AudioPlayer.state === AudioPlayer.StoppedState) {
-                        playTimer.stop()
-                    }
-                }
-            }
-            onMoved: {
-                if (AudioPlayer.duration === value) {
-                    AudioPlayer.stop()
-                } else {
-                    AudioPlayer.setPosition(value)
-                }
+    Timer {
+        id: playTimer
+        interval: 15
+        repeat: true
+        onTriggered: {
+            sliderView.value = AudioPlayer.position
+            if (AudioPlayer.state === AudioPlayer.StoppedState) {
+                playTimer.stop()
             }
         }
     }
+    onMoved: {
+        if (AudioPlayer.duration === value) {
+            AudioPlayer.stop()
+        } else {
+            AudioPlayer.setPosition(value)
+        }
+    }
+}
+}
 }

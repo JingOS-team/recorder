@@ -15,6 +15,7 @@ Rectangle {
     property var defaultSource
     property var playSource : "qrc:/assets/mic_pic.png"
     property var pauseSource : "qrc:/assets/pause.png"
+    property var whitePauseSource : "qrc:/assets/pause_white.png"
     property bool isPlayPage
     property bool isAnimImage
 

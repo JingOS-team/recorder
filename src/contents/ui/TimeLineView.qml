@@ -17,7 +17,9 @@ Rectangle {
     property int lineFixed
     property int audioUiX
     signal lineMoved(var lineX, var isLeft, var movePt)
-    property int itemWidth: 10
+    property int itemWidth: 6
+    property int itemMinHeight: 3
+    property int itemMaxHeight: 7
     property int secondLines: 6
     property double currentLineX
     property var movePosition
@@ -52,6 +54,7 @@ Rectangle {
 
         property int isVisibleIndex
         property int startRecordIndex: Math.floor(lineFixed / itemWidth / 2)
+        property int currentMaxContentX
 
         anchors.fill: parent
         orientation: ListView.Horizontal
@@ -67,7 +70,8 @@ Rectangle {
             repeat: true
             onRunningChanged: {
                 if (!running && !isStartPlayRecord) {
-                    dateList.isVisibleIndex = dateList.contentX / 10
+                    dateList.isVisibleIndex = dateList.contentX / itemWidth
+                    dateList.currentMaxContentX = dateList.contentX
                 }
             }
             onTriggered: {
@@ -105,9 +109,13 @@ Rectangle {
         }
 
         onMovementEnded: {
-            movePosition = Math.round(
-                        contentX / (lineRect.itemWidth * lineRect.secondLines) * 100000) / 100
-            lineMoved(currentLineX, true, movePosition)
+            if(dateList.contentX > currentMaxContentX){
+                dateList.contentX = currentMaxContentX
+            } else {
+                movePosition = Math.round(
+                            contentX / (lineRect.itemWidth * lineRect.secondLines) * 100000) / 100
+                lineMoved(currentLineX, true, movePosition)
+            }
         }
         Timer {
             id: itemTimer
@@ -126,11 +134,16 @@ Rectangle {
 
             width: itemWidth
             height: dateList.height
-            visible: (model.index - startIndex < dateList.isVisibleIndex)
-                     || model.index - startIndex < dateList.contentX / 10
+            visible: timeLineIsVisible()
 
             function timeLineIsVisible() {
-                return index < dateList.contentX / 10
+                if(!timeLineTimer.running){
+                    return (model.index - startIndex < dateList.isVisibleIndex)
+                            || (model.index - startIndex < dateList.contentX / itemWidth)
+                            && (dateList.contentX < dateList.currentMaxContentX)
+                }
+                return (model.index - startIndex < dateList.isVisibleIndex)
+                        || (model.index - startIndex < dateList.contentX / itemWidth)
             }
 
             Rectangle {
@@ -142,10 +155,11 @@ Rectangle {
                 }
                 width: 1
                 height: getHeight(index)
-                color: "#FFFFFF"
+                //black #FFFFFF
+                color: "#3C3F48"
                 function getHeight(index) {
                     var h = timeLine.startIndex > index ? 0 : ((index - timeLine.startIndex)
-                                                               % secondLines === 0 ? 10 : 7)
+                                                               % secondLines === 0 ? itemMaxHeight : itemMinHeight)
                     return h
                 }
             }
@@ -161,14 +175,15 @@ Rectangle {
 
                 anchors {
                     bottom: dateLines.top
-                    bottomMargin: 7
+                    bottomMargin: 4 * lastAppScaleSize
                     horizontalCenter: timeLine.horizontalCenter
                 }
-                font.pixelSize: defaultFontSize - 3
+                font.pixelSize: defaultFontSize - 5
                 opacity: 0.6
                 visible: (index - timeLine.startIndex) % secondLines == 0
                          && textStartIndex >= 0 && seconds % 2 == 0
-                color: "#FFFFFF"
+                //black #FFFFFF
+                color: "#3C3F48"
                 text: (minutes >= 10 ? minutes : ("0" + minutes)) + ":"
                       + (seconds >= 10 ? seconds : ("0" + seconds))
             }

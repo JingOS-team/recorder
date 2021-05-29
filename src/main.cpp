@@ -10,6 +10,7 @@
 #include <QQmlApplicationEngine>
 #include <QtQml>
 #include <QUrl>
+#include <KLocalizedString>
 #include <KLocalizedContext>
 #include <QAudioRecorder>
 #include "recordingmodel.h"
@@ -18,17 +19,22 @@
 #include "audiorecorder.h"
 #include "audioprober.h"
 #include "settingsmodel.h"
+#include <QDateTime>
 
 Q_DECL_EXPORT int main(int argc, char *argv[])
 {
+    qint64 startTime = QDateTime::currentMSecsSinceEpoch();
+    KLocalizedString::setApplicationDomain("jing_record");
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
+    app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
     QCoreApplication::setOrganizationName("KDE");
     QCoreApplication::setOrganizationDomain("kde.org");
     QCoreApplication::setApplicationName("KRecorder");
 
     qmlRegisterType<Recording>("KRecorder", 1, 0, "Recording");
     qmlRegisterType<AudioProber>("KRecorder", 1, 0, "AudioProber");
+
     qmlRegisterSingletonType<Utils>("KRecorder", 1, 0, "Utils", [] (QQmlEngine *, QJSEngine *) -> QObject* {
         return new Utils;
     });
@@ -45,14 +51,17 @@ Q_DECL_EXPORT int main(int argc, char *argv[])
         return SettingsModel::instance();
     });
 
+
     QQmlApplicationEngine engine;
 
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
+    engine.rootContext()->setContextProperty("MainStartTime",startTime);
     engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
 
     if (engine.rootObjects().isEmpty()) {
         return -1;
     }
+    qint64 endTime = QDateTime::currentMSecsSinceEpoch();
 
     return app.exec();
 }

@@ -14,14 +14,16 @@ import QtGraphicalEffects 1.12
 Menu {
     id: menu
 
-    property int mwidth: root.screen.width * CSJ.Left_view_Edit_Menu_width / CSJ.ScreenCurrentWidth
-    property int mheight: root.screen.height * CSJ.Left_view_Edit_Menu_height
-                          / CSJ.ScreenCurrentHeight
-    property var separatorColor: "#4DFFFFFF"
+    property int mwidth: 200 * lastAppScaleSize//root.screen.width * CSJ.Left_view_Edit_Menu_width / CSJ.ScreenCurrentWidth
+    property int m_menItemHeight: 180 * lastAppScaleSize / 4//(root.screen.height * CSJ.Left_view_Edit_Menu_height / CSJ.ScreenCurrentHeight) / 4
+    property int mheight: m_menItemHeight * menuItemCount
+    //black #4DFFFFFF
+    property var separatorColor: "#1A000000"
     property int separatorWidth: mwidth * 8 / 10
     property int mouseX
     property int mouseY
-    property int menuItemCount: 4
+    property int menuItemCount: menu.count
+    property int backRadius: 12 * lastAppScaleSize
 
     signal bulkClicked
     signal deleteClicked
@@ -30,11 +32,22 @@ Menu {
 
     padding: 0
     margins: 0
-
+    modal:true
+    closePolicy:Popup.CloseOnEscape | Popup.CloseOnReleaseOutside
+    Overlay.modal: Rectangle {
+        color: "#00000000"
+    }
     function rmBulkAction() {
         var ba = menu.actionAt(0)
         if (ba.text === CSJ.Left_View_Edit_Menu_Bulk) {
             menu.takeAction(0)
+        }
+
+        if(menu.count > 1){
+            var nameAction = menu.actionAt(1)
+            if (nameAction.text === CSJ.Left_View_Edit_Menu_Rename) {
+                menu.takeAction(1)
+            }
         }
     }
     function addBulkAction() {
@@ -42,11 +55,15 @@ Menu {
         if (ba.text !== CSJ.Left_View_Edit_Menu_Bulk) {
             menu.insertAction(0, bulkAction)
         }
+        var nameAction = menu.actionAt(menu.count - 1)
+        if (nameAction.text !== CSJ.Left_View_Edit_Menu_Rename) {
+            menu.insertAction(2, renameAction)
+        }
     }
 
     Action {
         id: bulkAction
-        text: qsTr(CSJ.Left_View_Edit_Menu_Bulk)
+        text: i18n(CSJ.Left_View_Edit_Menu_Bulk)
         checkable: true
         checked: false
         onCheckedChanged: {
@@ -55,7 +72,7 @@ Menu {
     }
 
     Action {
-        text: qsTr(CSJ.Left_View_Edit_Menu_Delete)
+        text: i18n(CSJ.Left_View_Edit_Menu_Delete)
         checkable: true
         checked: false
         onCheckedChanged: {
@@ -64,7 +81,8 @@ Menu {
     }
 
     Action {
-        text: qsTr(CSJ.Left_View_Edit_Menu_Rename)
+        id: renameAction
+        text: i18n(CSJ.Left_View_Edit_Menu_Rename)
         checkable: true
         checked: false
         onCheckedChanged: {
@@ -72,14 +90,14 @@ Menu {
         }
     }
 
-    Action {
-        text: qsTr(CSJ.Left_View_Edit_Menu_Save)
-        checkable: true
-        checked: false
-        onCheckedChanged: {
-            saveClicked()
-        }
-    }
+//    Action {
+//        text: i18n(CSJ.Left_View_Edit_Menu_Save)
+//        checkable: true
+//        checked: false
+//        onCheckedChanged: {
+//            saveClicked()
+//        }
+//    }
 
     delegate: MenuItem {
         id: menuItem
@@ -130,8 +148,9 @@ Menu {
                 }
                 leftPadding: mwidth / 10
                 text: menuItem.text
-                font.pointSize: defaultFontSize + 2
-                color: menuItem.highlighted ? "#ffffff" : "#ffffff"
+                font.pixelSize: defaultFontSize
+                //black #ffffff
+                color: menuItem.highlighted ? "#3C3F48" : "#3C3F48"
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
@@ -139,12 +158,13 @@ Menu {
             Image {
                 id: rightImage
                 width: height
-                height: parent.height / 3
+                height: 16
                 anchors {
                     right: parent.right
                     rightMargin: mwidth / 10
                     verticalCenter: parent.verticalCenter
                 }
+//                sourceSize: Qt.size(32,32)
                 source: getSource()
                 function getSource() {
                     switch (menuItem.text) {
@@ -160,42 +180,64 @@ Menu {
                     return ""
                 }
             }
+
+
         }
 
         background: Item {
             width: menu.mwidth
-            height: mheight / 4
+            height: mheight / menuItemCount
             implicitWidth: menu.mwidth
             implicitHeight: mheight / menuItemCount
             clip: true
-
-            Rectangle {
-                anchors.fill: parent
-                anchors.bottomMargin: menu.currentIndex === 0 ? -radius : 0
-                anchors.topMargin: menu.currentIndex === menu.count - 1 ? -radius : 0
-                radius: menu.currentIndex === 0
-                        || menu.currentIndex === menu.count - 1 ? 20 : 0
-                color: menuItem.highlighted ? "#2E747480" : "transparent"
-            }
             Rectangle {
                 id: bline
                 width: separatorWidth
                 height: 1
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
-                visible: menuItem.text !== CSJ.Left_View_Edit_Menu_Save
+                visible: menuItemCount === 3 ? (menuItem.text !== CSJ.Left_View_Edit_Menu_Rename):(menuItem.text !== CSJ.Left_View_Edit_Menu_Delete)
                 color: separatorColor
             }
+            Rectangle {
+                anchors.fill: parent
+                anchors.bottomMargin: menuItemCount === 1 ? 0 : (menu.currentIndex === 0 ? -radius : 0)
+                anchors.topMargin: menuItemCount === 1 ? 0 :  (menu.currentIndex === menu.count - 1 ? -radius : 0)
+                radius: menuItemCount === 1 ? backRadius : (menu.currentIndex === 0
+                        || menu.currentIndex === menu.count - 1 ? backRadius : 0)
+                color: menuItemCount === 1 ? "transparent" : (menuItem.highlighted ? "#2E747480" : "transparent")
+            }
+
         }
     }
 
     background: Rectangle {
         id: mBr
+
+        property string shadowColor: "#80C3C9D9"
+
         width: mwidth
         implicitWidth: mwidth
-        color: "#000000"
-        border.width: 0
-        radius: 20
+        //black #CC000000
+        color: "#00000000"
+        radius: backRadius
+
+        border {
+            width: 1
+            color: "#C7D3DBEE"
+        }
+        layer.enabled: true
+        layer.effect: DropShadow {
+            id: rectShadow
+            anchors.fill: mBr
+            color: mBr.shadowColor
+            source: mBr
+            samples: 9
+            radius: 4
+            horizontalOffset: 0
+            verticalOffset: 0
+            spread: 0
+        }
         ShaderEffectSource {
             id: eff
             width: fastBlur.width
@@ -217,7 +259,7 @@ Menu {
         Rectangle {
             id: maskRect
             anchors.fill: fastBlur
-            radius: 20
+            radius: backRadius
             visible: false
             clip: true
         }
@@ -230,9 +272,10 @@ Menu {
         }
         Rectangle {
             anchors.fill: mBr
-            radius: 20
-            visible: false
-            color: "#CC000000"
+            radius: backRadius
+            visible: true
+            //black #4D000000
+            color: "#66FFFFFF"
             clip: true
         }
     }

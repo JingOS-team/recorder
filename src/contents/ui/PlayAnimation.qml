@@ -27,7 +27,8 @@ Item {
         width: control.width
         height: control.height
         anchors.centerIn: parent
-        source: isAnimationPlayer ? "qrc:/assets/white_more.png":"qrc:/assets/red_more.png"
+        //black white_more
+        source: isAnimationPlayer ? "qrc:/assets/black_more.png":"qrc:/assets/red_more.png"
 
         RotationAnimation{
             loops: Animation.Infinite
@@ -47,7 +48,7 @@ Item {
         width: control.width
         height: control.height
         anchors.centerIn: parent
-        source:  isAnimationPlayer ? "qrc:/assets/white_min.png":"qrc:/assets/red_min.png"
+        source:  isAnimationPlayer ? "qrc:/assets/black_min.png":"qrc:/assets/red_min.png"
 
         RotationAnimation{
             loops: Animation.Infinite

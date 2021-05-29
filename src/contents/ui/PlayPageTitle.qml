@@ -5,11 +5,12 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-import QtQuick 2.12
+import QtQuick 2.2
 import "commonsize.js" as CSJ
 import KRecorder 1.0
-import QtQuick.Controls 1.4 as Controls
+import QtQuick.Controls 2.14 as Controls
 import QtQuick.Controls.Styles 1.4
+import org.kde.kirigami 2.15 as Kirigami
 
 Rectangle {
     id: playpageTitle
@@ -29,7 +30,10 @@ Rectangle {
     color: "#00000000"
 
     function renamePlayPageTitle(teStatus) {
-        nameTextEdit.focus = teStatus
+        if(nameTextEdit.focus !== teStatus){
+            nameTextEdit.focus = teStatus
+            nameTextEdit.cursorVisible = teStatus
+        }
     }
 
     Rectangle {
@@ -45,15 +49,20 @@ Rectangle {
 
         MouseArea {
             anchors.fill: parent
-            hoverEnabled: true
-            onEntered: {
+//            hoverEnabled: true
+            onClicked: {
                 nameTextEdit.enabled = true
                 nameTextEdit.focus = true
             }
-            onExited: {
+//            onEntered: {
+//                nameTextEdit.enabled = true
+//                nameTextEdit.focus = true
+//            }
+//            onExited: {
 
-            }
+//            }
         }
+
         Controls.TextField {
             id: nameTextEdit
 
@@ -62,20 +71,47 @@ Rectangle {
                 bottom: parent.bottom
             }
             width: parent.width - parent.width / 10
-            height: parent.height
             enabled: true
             text: titleContent
             activeFocusOnPress: true
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             maximumLength: 40
+            //black #FFFFFF
+            color: "#3C3F48"
+            font.pixelSize: defaultFontSize + 9
 
-            style: TextFieldStyle {
-                id: ts
-                textColor: "#FFFFFF"
-                font.pointSize: defaultFontSize + 15
-                background: Rectangle {
-                    color: "transparent"
+//            style: TextFieldStyle {
+//                id: ts
+//                //black #FFFFFF
+//                textColor: "#3C3F48"
+//                font.pixelSize: defaultFontSize + 15
+//                background: Rectangle {
+//                    color: "transparent"
+//                }
+//            }
+            background: Rectangle{
+             color: "transparent"
+             anchors.fill: parent
+            }
+
+            cursorDelegate: Rectangle{
+                id: cursorRect
+                anchors.verticalCenter: parent.verticalCenter
+                color: "#E95B4E"
+                width: 4 * appScaleSize
+                radius: width/2
+                Timer{
+                    id: cursorTimer
+                    interval: 700
+                    running: nameTextEdit.focus
+                    repeat: true
+                    onTriggered: {
+                        cursorRect.visible = !cursorRect.visible
+                    }
+                    onRunningChanged: {
+                        cursorRect.visible = running
+                    }
                 }
             }
 
@@ -84,11 +120,14 @@ Rectangle {
                 renameClicked(true, nameTextEdit.text)
             }
             onTextChanged: {
+                nameTextEdit.horizontalAlignment = Text.AlignHCenter
+                nameTextEdit.verticalAlignment = Text.AlignVCenter
                 if (nameTextEdit.visible) {
                     textChangeContent = nameTextEdit.text
                 }
             }
         }
+
         Rectangle {
             id: rtText
 
@@ -109,8 +148,8 @@ Rectangle {
                     verticalCenter: parent.verticalCenter
                     left: parent.left
                 }
-                color: "#FFFFFF"
-                font.pointSize: defaultFontSize + 15
+                color: "#000000"
+                font.pixelSize: defaultFontSize + 9
                 clip: true
                 verticalAlignment: Text.AlignVCenter
                 visible: !nameTextEdit.visible
@@ -133,6 +172,7 @@ Rectangle {
         anchors {
             horizontalCenter: parent.horizontalCenter
             top: nameRect.bottom
+            topMargin: 7 * appScaleSize
         }
         width: currentDateText.contentWidth + 20
         height: parent.height * (CSJ.PlayPageView.playpage_title_name_height
@@ -142,8 +182,8 @@ Rectangle {
         Text {
             id: currentDateText
 
-            color: "#FFFFFF"
-            font.pointSize: defaultFontSize + 48
+            color: "#3C3F48"
+            font.pixelSize: defaultFontSize + 30
             anchors.verticalCenter: parent.verticalCenter
             text: currentDateContent === "" ? "00:00.0" : currentDateContent
         }
@@ -155,8 +195,7 @@ Rectangle {
         anchors {
             horizontalCenter: parent.horizontalCenter
             top: currentDateRect.bottom
-            topMargin: parent.height * (CSJ.PlayPageView.playpage_title_date_length_topmargin
-                                        / CSJ.PlayPageView.playpage_title_height)
+            topMargin: 14 * lastAppScaleSize //parent.height * (CSJ.PlayPageView.playpage_title_date_length_topmargin/ CSJ.PlayPageView.playpage_title_height)
         }
         width: dateText.contentWidth + lengthText.contentWidth + 20
         height: parent.height * (CSJ.PlayPageView.playpage_title_date_length_height
@@ -164,24 +203,25 @@ Rectangle {
         color: "#00000000"
 
         Text {
-            id: dateText
-
-            anchors.verticalCenter: parent.verticalCenter
-            color: "#A29BA9"
-            font.pointSize: defaultFontSize - 3
-            text: dateContent
-        }
-        Text {
             id: lengthText
 
+            anchors.verticalCenter: parent.verticalCenter
+            //black #A29BA9
+            color: "#993C3F48"
+            font.pixelSize: defaultFontSize - 3
+            text: lengthContent
+        }
+        Text {
+            id: dateText
+
             anchors {
-                left: dateText.right
+                left: lengthText.right
                 leftMargin: 10
                 verticalCenter: parent.verticalCenter
             }
-            color: "#A29BA9"
-            font.pointSize: defaultFontSize - 3
-            text: lengthContent
+            color: "#993C3F48"
+            font.pixelSize: defaultFontSize - 3
+            text: dateContent
         }
     }
 }

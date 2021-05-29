@@ -22,6 +22,7 @@
         <file alias="PlayPageTitle.qml">contents/ui/PlayPageTitle.qml</file>
         <file alias="EditDialogView.qml">contents/ui/EditDialogView.qml</file>
         <file alias="PlayAnimation.qml">contents/ui/PlayAnimation.qml</file>
+        <file alias="ToastView.qml">contents/ui/ToastView.qml</file>
     </qresource>
     <qresource prefix="/assets">
         <file alias="start.png">assest/start.png</file>
@@ -48,9 +49,6 @@
         <file alias="save.png">assest/save.png</file>
         <file alias="record_base.png">assest/record_base.png</file>
         <file alias="mic_pic.png">assest/mic_pic.png</file>
-        <file>assest/delete_default1.png</file>
-        <file>assest/delete_default11.png</file>
-        <file>assest/delete1.png</file>
         <file alias="edit_bulk.png">assest/edit_bulk.png</file>
         <file alias="edit_delete.png">assest/edit_delete.png</file>
         <file alias="edit_rename.png">assest/edit_rename.png</file>
@@ -62,7 +60,12 @@
         <file alias="recordLine.svg">assest/recordLine.svg</file>
         <file alias="white_more.png">assest/anima/white/white_more.png</file>
         <file alias="white_min.png">assest/anima/white/white_min.png</file>
-                <file alias="red_more.png">assest/anima/red/red_more.png</file>
+        <file alias="red_more.png">assest/anima/red/red_more.png</file>
         <file alias="red_min.png">assest/anima/red/red_min.png</file>
+        <file alias="null_recorderfile.png">assest/null_recorderfile.png</file>
+        <file alias="black_min.png">assest/anima/black/black_min.png</file>
+        <file alias="black_more.png">assest/anima/black/black_more.png</file>
+        <file alias="clock_normal.png">assest/clock_normal.png</file>
+        <file alias="pause_white.png">assest/pause_white.png</file>
     </qresource>
 </RCC>

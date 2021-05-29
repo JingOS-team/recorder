@@ -17,8 +17,19 @@
 #include <QCoreApplication>
 #include <QScreen>
 #include <QGuiApplication>
+#include <KLocalizedString>
+#include <QFileSystemWatcher>
+#include <kdirwatch.h>
+#include <KSharedConfig>
+#include <KConfigGroup>
+#include <QDBusConnection>
+#include <KConfigWatcher>
 
-
+class RecordingModel;
+static RecordingModel *s_recordingModel = nullptr;
+static QString dateFormatString = "yyyy/MM/dd hh:mm ap";
+#define FORMAT24H "HH:mm:ss"
+#define FORMAT12H "h:mm:ss ap"
 
 class RecordingTag :public QObject {
     Q_OBJECT
@@ -88,33 +99,7 @@ public:
     {
         return m_recordDate;
     }
-    QString recordDatePretty() const
-    {
-        QString dateString;
-        QDateTime currentDate =  QDateTime::currentDateTime();
-        int dayoffset = m_recordDate.daysTo(currentDate);
-
-        if (dayoffset <= 7) {
-            if (dayoffset < 1) {
-                dateString = m_recordDate.toString("hh:mm AP");
-            } else if (dayoffset == 1) {
-                dateString = "yestday "+ m_recordDate.toString("hh:mm AP");
-            } else {
-                dateString =  m_recordDate.toString("dddd hh:mm AP");
-            }
-        } else {
-            int currentYear = currentDate.date().year();
-            int dataYear = m_recordDate.date().year();
-            if (currentYear == dataYear) {
-                dateString = m_recordDate.toString("MM-dd hh:mm AP");
-            } else {
-                dateString = m_recordDate.toString("yyyy-MM-dd hh:mm AP");
-
-            }
-
-        }
-        return dateString;
-    }
+    QString recordDatePretty() const;
     int recordingLength() const
     {
         return m_recordingLength;
@@ -150,22 +135,26 @@ signals:
 };
 
 
-
-class RecordingModel;
-static RecordingModel *s_recordingModel = nullptr;
-static QString dateFormatString = "yyyy/MM/dd hh:mm ap";
-
 class RecordingModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(QList<RecordingTag*> tags READ tags NOTIFY tagsChanged)
-
+    Q_PROPERTY(bool isForeground READ isForeground WRITE setForeground NOTIFY foregroundChanged)
 
 private:
     QString m_searchContent;
 public:
     QList<RecordingTag*> tags() {
         return m_recordingTag;
+    }
+
+    bool isForeground() {
+        return m_isForeground;
+    }
+
+    void setForeground(bool isForeG) {
+        m_isForeground = isForeG;
+        emit foregroundChanged();
     }
 
     enum Roles {
@@ -203,6 +192,10 @@ public:
     Q_INVOKABLE void deleteRecordingByItem(Recording* item);
     Q_INVOKABLE void addTags(QString tagName,QString tagDate);
     Q_INVOKABLE void removeTags(int index);
+    Q_INVOKABLE bool is24HourFormat();
+    QString getCurrentFormat();
+public slots:
+    void kcmClockUpdated();
 public:
     QSettings* m_settings;
 
@@ -215,11 +208,17 @@ private:
     int m_screenWidth;
     int m_screenHeight;
     int m_itemSelectCount;
+    bool m_isForeground = true;
+    QString m_currentLocalTime;
 
 signals:
     void tagsChanged();
     void insertNewRecordFile();
     void recorderCheckedChange(bool checked);
+    void showTipText(QString tipText);
+    void foregroundChanged();
+public slots:
+    void recordDirChanged(const QString &path);
 
 };
 

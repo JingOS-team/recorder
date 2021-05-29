@@ -26,10 +26,11 @@ include(ECMGenerateHeaders)
 include(ECMPoQmTools)
 
 ################# Find dependencies #################
-find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Qml QuickControls2 Multimedia)
+find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Qml QuickControls2 Multimedia DBus)
 find_package(KF5Kirigami2)
 find_package(KF5I18n)
 find_package(KF5Config)
+find_package(KF5CoreAddons)
 
 ################# Enable C++11 features for clang and gcc #################
 set(CMAKE_CXX_STANDARD 11)
@@ -43,3 +44,5 @@ install(FILES org.kde.krecorder.svg DESTINATION ${KDE_INSTALL_FULL_ICONDIR}/hico
 kde_enable_exceptions()
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
+find_package(KF5I18n CONFIG REQUIRED)
+ki18n_install(po)

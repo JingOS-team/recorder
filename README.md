@@ -6,7 +6,7 @@
 -->
 
 # Jing-KRecorder <img src="logo.png" width="40"/>
-Jing-KRecorder is based on KRecorder [gitlab](https://invent.kde.org/plasma-mobile/krecorder) , a beautifully designed jing-krecorder that conforms to the JingOS style and has a compatible `pad / desktop` experience.
+Jing-KRecorder is based on KRecorder [github](https://github.com/JingOS-team/jing-kclock/blob/master/TODO) , a beautifully designed jing-krecorder that conforms to the JingOS style and has a compatible `pad / desktop` experience.
 
 ## Features
 * Record audio with a visualizer, and pausing functionality
@@ -21,8 +21,8 @@ Jing-KRecorder is based on KRecorder [gitlab](https://invent.kde.org/plasma-mobi
 
 ## Links
 - Home: [www.jingos.com](http://www.jingos.com/)
-- Project page: [https://github.com/JingOS-team/jing-krecorder](https://github.com/JingOS-team/jing-krecorder)
-- File issues: [https://github.com/JingOS-team/jing-krecorder/issues](https://github.com/JingOS-team/jing-krecorder/issues)
+- Project page: github.com/jingOS-team/jing-krecorder
+- File issues: github.com/jingOS-team/jing-krecorder/issues
 - Development channel: [www.jingos.com](http://www.jingos.com/)
 
 ## Installing

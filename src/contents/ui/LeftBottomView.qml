@@ -21,7 +21,7 @@ RowLayout {
         width:itemWidth
         height: parent.height
         imageHeight: itemImageHeight
-        textContent: "delete"
+        textContent: i18n("delete")
         imageSource: ""
         onBottomItemclicked: {
         }
@@ -33,7 +33,7 @@ RowLayout {
         height: parent.height
         imageSource: ""
         imageHeight: itemImageHeight
-        textContent: "rename"
+        textContent: i18n("rename")
         onBottomItemclicked: {
         }
     }
@@ -44,7 +44,7 @@ RowLayout {
         height: parent.height
         imageSource: ""
         imageHeight: itemImageHeight
-        textContent: "selectAll"
+        textContent: i18n("selectAll")
         onBottomItemclicked: {
         }
     }
@@ -55,7 +55,7 @@ RowLayout {
         height: parent.height
         imageSource: ""
         imageHeight: itemImageHeight
-        textContent: "more"
+        textContent: i18n("more")
         onBottomItemclicked: {
         }
     }

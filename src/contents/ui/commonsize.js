@@ -5,8 +5,8 @@ var ScreenHeight = 1200
 var backgroundColor = "#1C1C1E"
 var GridView_Width= 580;
 var GridView_Cell_Margin= 580;
-var Left_View_CheckBox_Margin= 14;
-var Left_View_Clock_Width= 20;
+var Left_View_CheckBox_Margin= 24;
+var Left_View_Clock_Width= 10;
 var Left_View_Icon_Height= 68;
 var Left_View_Cancel_Height= 34;
 var playPage_Bottom_middle_Image_height = 120
@@ -14,16 +14,16 @@ var playPage_Bottom_right_Image_height = 74
 var playPage_Bottom_Left_right_margin = 50
 var Left_view_Edit_Menu_width=400
 var Left_view_Edit_Menu_height=360
-var Left_View_Edit_Menu_Bulk="Bulk edit"
-var Left_View_Edit_Menu_Delete="Delete"
-var Left_View_Edit_Menu_Rename="Rename"
-var Left_View_Edit_Menu_Save="Save to file"
+var Left_View_Edit_Menu_Bulk=i18n("Bulk edit")
+var Left_View_Edit_Menu_Delete=i18n("Delete")
+var Left_View_Edit_Menu_Rename=i18n("Rename")
+var Left_View_Edit_Menu_Save=i18n("Save to file")
 
 var LeftView ={
     "CheckBoxWidth":28,
     "CheckBoxMargins":14,
     "list_view_height":871,
-    "ListItemMargin":20,
+    "ListItemMargin":10,
     "ListItemWidth":490,
     "ListItemHeight":192,
     "ListItemRadius":20,
@@ -75,8 +75,8 @@ var PlayPageView ={
     "playpage_title_name_height":72,
     "playpage_title_date_length_height":28,
     "playage_middle_height":570,
-    "playage_middle_middel_line_width":14,
-    "playage_middle_middle_line_height":49
+    "playage_middle_middel_line_width":6,
+    "playage_middle_middle_line_height":25
 
 }
 

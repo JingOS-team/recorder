@@ -5,7 +5,7 @@
  */
 
 import QtQuick 2.12
-import org.kde.kirigami 2.0 as Kirigami
+import org.kde.kirigami 2.15 as Kirigami
 import QtQuick.Controls 2.2 as Controls
 import QtQuick.Layouts 1.2
 import KRecorder 1.0
@@ -24,16 +24,33 @@ Kirigami.Page {
     rightPadding: 0
 
     background: Rectangle{
-        color: "#B3000000"
+//        color: "#B3000000"
+        //black #1C1C21
+        color: "#E8EFFF"
     }
+
+    ToastView{
+        id:toastShow
+    }
+
+    function showToast(tips)
+     {
+         toastShow.toastContent = tips
+         toastShow.x = (root.width - toastShow.width) / 2
+         toastShow.y = root.height / 4 * 3
+         toastShow.visible = true
+     }
 
     RecordMainLeftView{
         id: mainLeftView
 
         anchors{
             top: parent.top
+            topMargin: 41 *lastAppScaleSize
             bottom: parent.bottom
-            bottomMargin: parent.height/20
+//            bottomMargin: 10 * lastAppScaleSize
+            left: parent.left
+            leftMargin: 17 * lastAppScaleSize
         }
         width:parent.width *(CSJ.LeftView.left_view_width/CSJ.ScreenCurrentWidth)
         height: parent.height
@@ -42,6 +59,17 @@ Kirigami.Page {
         onItemClicked:{
             rightViewPlayer.ppTitle.renamePlayPageTitle(false)
             rightViewPlayer.setFileName()
+            if(AudioPlayer.state === AudioPlayer.PlayingState){
+                AudioPlayer.stop()
+            }
+            AudioPlayer.setVolume(100);
+            AudioPlayer.setMediaPath(recording.filePath)
+            recording.getTags()
+            rightViewPlayer.recording = recording
+        }
+        
+        onInsertRecordItem: {
+            rightViewPlayer.ppTitle.renamePlayPageTitle(false)
             if(AudioPlayer.state === AudioPlayer.PlayingState){
                 AudioPlayer.stop()
             }
@@ -60,10 +88,18 @@ Kirigami.Page {
         }
 
         onDeleteClicked: {
-            RecordingModel.deleteRecording(index);
             AudioPlayer.stop()
-            AudioPlayer.clearVolumnList()
-            rightViewPlayer.recording = RecordingModel.firstRecording()
+            RecordingModel.deleteRecording(index);
+            if (mainLeftView.leftItemCount > 0) {
+                rightViewPlayer.recording = RecordingModel.firstRecording()
+                if (rightViewPlayer.recording) {
+                    AudioPlayer.setMediaPath(rightViewPlayer.recording.filePath)
+                }else {
+                    AudioPlayer.setMediaPath("")
+                }
+            } else {
+                AudioPlayer.setMediaPath("")
+            }
         }
 
         onRenameClicked: {
@@ -79,10 +115,12 @@ Kirigami.Page {
             left: mainLeftView.right
             right: parent.right
             top: parent.top
+            topMargin: 41 *lastAppScaleSize
             bottom: parent.bottom
-            bottomMargin: recordMainView.height/20
-            rightMargin: root.width * (CSJ.playPage_Bottom_Left_right_margin/CSJ.ScreenCurrentWidth)
-            leftMargin:root.width* (CSJ.playPage_Bottom_Left_right_margin/CSJ.ScreenCurrentWidth)
+            bottomMargin: 30 * lastAppScaleSize
+            rightMargin: 23 * lastAppScaleSize//root.width * (CSJ.playPage_Bottom_Left_right_margin/CSJ.ScreenCurrentWidth)
+//            leftMargin:root.width* (CSJ.playPage_Bottom_Left_right_margin/CSJ.ScreenCurrentWidth)
+            leftMargin: 23 * lastAppScaleSize
         }
         width: parent.width - mainLeftView.width
         height: parent.height
@@ -91,10 +129,12 @@ Kirigami.Page {
     Rectangle{
         id:rightDefaultView
 
-        anchors.left: mainLeftView.right
+        anchors.right: parent.right
+        anchors.left: rightViewPlayer.left
         visible: !mainLeftView.titleIsEdit
-        color:"#801C1C1C"
-        width: parent.width - mainLeftView.width
+//        color:"#801C1C1C"
+        //black #F20E0E0F
+        color: "#993C3F48"
         height: parent.height
         MouseArea{
             anchors.fill: parent
