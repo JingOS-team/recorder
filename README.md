@@ -21,8 +21,8 @@ Jing-KRecorder is based on KRecorder [github](https://github.com/JingOS-team/jin
 
 ## Links
 - Home: [www.jingos.com](http://www.jingos.com/)
-- Project page: github.com/jingOS-team/jing-krecorder
-- File issues: github.com/jingOS-team/jing-krecorder/issues
+- Project page: https://github.com/JingOS-team/recorder
+- File issues: https://github.com/JingOS-team/recorder/issues
 - Development channel: [www.jingos.com](http://www.jingos.com/)
 
 ## Installing
