@@ -1,7 +1,9 @@
 /*
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 
 import QtQuick 2.12
@@ -24,21 +26,18 @@ Kirigami.Page {
     rightPadding: 0
 
     background: Rectangle{
-//        color: "#B3000000"
-        //black #1C1C21
-        color: "#E8EFFF"
+        color: Kirigami.JTheme.background//"#E8EFFF"
     }
 
-    ToastView{
+    Kirigami.JToolTip{
         id:toastShow
+        font.pixelSize: 17 * appFontSize
     }
 
     function showToast(tips)
      {
-         toastShow.toastContent = tips
-         toastShow.x = (root.width - toastShow.width) / 2
-         toastShow.y = root.height / 4 * 3
-         toastShow.visible = true
+        toastShow.text = tips
+        toastShow.show(tips, 1500)
      }
 
     RecordMainLeftView{
@@ -48,7 +47,6 @@ Kirigami.Page {
             top: parent.top
             topMargin: 41 *lastAppScaleSize
             bottom: parent.bottom
-//            bottomMargin: 10 * lastAppScaleSize
             left: parent.left
             leftMargin: 17 * lastAppScaleSize
         }
@@ -91,7 +89,7 @@ Kirigami.Page {
             AudioPlayer.stop()
             RecordingModel.deleteRecording(index);
             if (mainLeftView.leftItemCount > 0) {
-                rightViewPlayer.recording = RecordingModel.firstRecording()
+                rightViewPlayer.recording = RecordingModel.getRecordingByIndex(index)
                 if (rightViewPlayer.recording) {
                     AudioPlayer.setMediaPath(rightViewPlayer.recording.filePath)
                 }else {
@@ -118,8 +116,7 @@ Kirigami.Page {
             topMargin: 41 *lastAppScaleSize
             bottom: parent.bottom
             bottomMargin: 30 * lastAppScaleSize
-            rightMargin: 23 * lastAppScaleSize//root.width * (CSJ.playPage_Bottom_Left_right_margin/CSJ.ScreenCurrentWidth)
-//            leftMargin:root.width* (CSJ.playPage_Bottom_Left_right_margin/CSJ.ScreenCurrentWidth)
+            rightMargin: 23 * lastAppScaleSize
             leftMargin: 23 * lastAppScaleSize
         }
         width: parent.width - mainLeftView.width
@@ -132,9 +129,7 @@ Kirigami.Page {
         anchors.right: parent.right
         anchors.left: rightViewPlayer.left
         visible: !mainLeftView.titleIsEdit
-//        color:"#801C1C1C"
-        //black #F20E0E0F
-        color: "#993C3F48"
+        color: root.isDarkTheme ? "#F20E0E0F" : "#993C3F48"
         height: parent.height
         MouseArea{
             anchors.fill: parent
@@ -143,7 +138,4 @@ Kirigami.Page {
             }
         }
     }
-
-
-
 }

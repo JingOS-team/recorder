@@ -67,5 +67,6 @@
         <file alias="black_more.png">assest/anima/black/black_more.png</file>
         <file alias="clock_normal.png">assest/clock_normal.png</file>
         <file alias="pause_white.png">assest/pause_white.png</file>
+        <file alias="checkbox_default_black.png">assest/checkbox_default_black.png</file>
     </qresource>
 </RCC>

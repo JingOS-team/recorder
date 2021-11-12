@@ -1,7 +1,7 @@
 /*
  * SPDX-FileCopyrightText: 2020 Jonah Brüchert <jbb@kaidan.im>
  * SPDX-FileCopyrightText: 2020 Devin Lin <espidev@gmail.com>
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * SPDX-FileCopyrightText: 2021 Zhang He Gang <zhanghegang@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -21,6 +21,7 @@
 
 #include <audioprober.h>
 #include <recordingmodel.h>
+#include <QDir>
 
 class AudioRecorder;
 static AudioRecorder *s_audioRecorder = nullptr;
@@ -92,7 +93,7 @@ public:
         stop();
     }
 
-    Q_INVOKABLE QString getFilePath();
+    Q_INVOKABLE QString getFilePath(bool isTimeout);
     Q_INVOKABLE bool deleteFilePath();
 
     QString getCurrentDate() {
@@ -102,6 +103,9 @@ public:
     Q_INVOKABLE void saveRecording();
 
     void renameCurrentRecording();
+    bool isAudioRecording();
+    void stopRecording();
+    Q_INVOKABLE void mkdirPath();
 
     Q_INVOKABLE bool setRecordingName(const QString &rName);
     Q_INVOKABLE QString getRecordingName(QString defaultName);

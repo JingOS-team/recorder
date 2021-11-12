@@ -1,13 +1,13 @@
 /*
  * SPDX-FileCopyrightText: 2020 Jonah Brüchert <jbb@kaidan.im>
  * SPDX-FileCopyrightText: 2020 Devin Lin <espidev@gmail.com>
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * SPDX-FileCopyrightText: 2021 Zhang He Gang <zhanghegang@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 import QtQuick 2.12
-import org.kde.kirigami 2.12 as Kirigami
+import org.kde.kirigami 2.15 as Kirigami
 import QtQuick.Controls 2.2 as Controls
 import QtQuick.Layouts 1.2
 import KRecorder 1.0
@@ -23,40 +23,48 @@ Rectangle {
     property int parentHeight:rightPage.height
     property int currentVX
     property var recordTimeLength : 0
-    property var appScaleSize : width / 1920
-    property var lastAppScaleSize: width / 888
+    property var playPageWidth
 
-//    color: "#B3000000"
-    //black 1C1C21
-    color: "#E8EFFF"
+    color: Kirigami.JTheme.background
 
-    ToastView{
+    Kirigami.JToolTip{
         id:toastShow
-        toastItem: rightPage
+        font.pixelSize: 17 * appFontSize
     }
 
     function showToast(tips)
      {
-         toastShow.toastContent = tips
-         toastShow.x = (rightPage.width - toastShow.width) / 2
-         toastShow.y = rightPage.height / 4 * 3
-         toastShow.visible = true
+        toastShow.text = tips
+        toastShow.show(tips, 1500)
      }
+
+    function switchPR() {
+        var isTimeout = vzAudioView.currentRecordTime > (15 * 60 * 1000)
+        var path = AudioRecorder.getFilePath(isTimeout)
+        if(!isTimeout){
+            AudioPlayer.stop()
+            AudioPlayer.setVolume(100);
+            AudioPlayer.setMediaPath(path)
+            vzAudioView.isRecordPlay = true
+        }
+    }
 
     PlayPageTitle{
         id:recordPageTitle
         property var defaultFileName: getRecordDefaultFileName()
-        property var cacheDefaultFileName
-
+        property var cacheDefaultFileName: ""
 
         function getRecordDefaultFileName(){
-            cacheDefaultFileName = AudioRecorder.getRecordingName(i18n("New Recordings"))
-            return cacheDefaultFileName
+            var cacheName = AudioRecorder.getRecordingName(i18n("New Recordings"))
+            cacheDefaultFileName = cacheName
+            return cacheName
         }
         anchors{
          top: parent.top
-         topMargin: 20
+         topMargin: 20 * lastAppScaleSize
+         horizontalCenter: parent.horizontalCenter
         }
+        width: playPageWidth
 
         titleContent: defaultFileName
         dateContent: AudioRecorder.currentTime
@@ -65,20 +73,25 @@ Rectangle {
             return  isStopped ? "00:00:00" : Utils.formatTime(vzAudioView.currentRecordTime)
         }
         onRenameClicked: {
-
-            if((newFileName.indexOf("#") !== -1)
+            if((newFileName.indexOf(".") !== -1)
                     || (newFileName.indexOf("/") !== -1)
-                    || (newFileName.indexOf("?") !== -1))
+                    )
             {
                 newFileName = cacheDefaultFileName
-                showToast(i18n("The file name cannot contain the following characters # / ?"))
+                titleContent = newFileName
+                showToast(i18n("The file name cannot contain the following characters . /"))
+                return
             }else if(newFileName.startsWith("."))
             {
                 newFileName = cacheDefaultFileName
+                titleContent = newFileName
                 showToast(i18n("Cannot start with a symbol as a file name"))
+                return
             } else if (newFileName === ""){
                 newFileName = cacheDefaultFileName
+                titleContent = newFileName
                 showToast(i18n("The file name cannot be empty."))
+                return
             }
             var fileExists = AudioRecorder.setRecordingName(recordPageTitle.textChangeContent);
             if(fileExists){
@@ -87,18 +100,10 @@ Rectangle {
             }
             if(isFileNameEdit){
                 titleContent = newFileName
+                recordPageTitle.cacheDefaultFileName = newFileName
             }
         }
     }
-
-//    Timer{
-//        interval: 1000
-//        repeat: true
-//        running: AudioRecorder.state == AudioRecorder.RecordingState
-//        onTriggered: {
-//            recordTimeLength += 1000
-//        }
-//    }
 
     Connections {
         target: AudioRecorder
@@ -107,6 +112,16 @@ Rectangle {
         }
     }
     
+    Connections {
+        target: RecordingModel
+        onQuitApp:{
+            console.log("onQuitApp ing....")
+        }
+        function onError(error) {
+            console.warn("Error on the RecordingModel", error)
+        }
+    }
+
     Visualization {
         id:vzAudioView
 
@@ -158,21 +173,41 @@ Rectangle {
             }else{
                 AudioRecorder.pause()
             }
-            var path = AudioRecorder.getFilePath()
-            AudioPlayer.stop()
-            AudioPlayer.setVolume(100);
-            AudioPlayer.setMediaPath(path)
-            vzAudioView.isRecordPlay = true
+            switchPR()
         }
         onDoneClicked: {
+            if((recordPageTitle.textChangeContent.indexOf(".") !== -1)
+                    || (recordPageTitle.textChangeContent.indexOf("/") !== -1)
+                    )
+            {  
+                recordPageTitle.titleContent = recordPageTitle.cacheDefaultFileName
+                showToast(i18n("The file name cannot contain the following characters . /"))
+                AudioRecorder.pause();
+                switchPR()
+                return
+            }else if(recordPageTitle.textChangeContent.startsWith("."))
+            {
+                recordPageTitle.titleContent = recordPageTitle.cacheDefaultFileName
+                showToast(i18n("Cannot start with a symbol as a file name"))
+                AudioRecorder.pause();
+                switchPR()
+                return
+            } else if (recordPageTitle.textChangeContent === ""){
+                recordPageTitle.titleContent = recordPageTitle.cacheDefaultFileName
+                showToast(i18n("The file name cannot be empty."))
+                AudioRecorder.pause();
+                switchPR()
+                return
+            }
+
             if(AudioRecorder.state === AudioRecorder.RecordingState){
                 AudioRecorder.pause();
             }
+
             var fileExists = AudioRecorder.setRecordingName(recordPageTitle.textChangeContent);
             if(!fileExists){
                 stopRecordingPlay();
                 AudioRecorder.stop();
-//                pageStack.layers.pop();
                 mainStackView.pop()
             } else {
                 recordPageTitle.renamePlayPageTitle(true)

@@ -1,7 +1,9 @@
 /*
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.12
 import org.kde.kirigami 2.12 as Kirigami

@@ -1,6 +1,14 @@
+/*
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
+ *
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
+ */
 import QtQuick 2.0
 import QtGraphicalEffects 1.0
 import QtQuick.Controls 2.15
+import org.kde.kirigami 2.15 as Kirigami
 
 ToolTip
 {
@@ -16,7 +24,7 @@ ToolTip
     height: 65 * lastAppScaleSize
     background: Rectangle
     {
-        radius: 18
+        radius: 18 * lastAppScaleSize
         color: "transparent"
         ShaderEffectSource
         {
@@ -36,7 +44,7 @@ ToolTip
             anchors.fill: parent
 
             source: footerBlur
-            radius: 60
+            radius: 60 * lastAppScaleSize
             cached: true
             visible: false
         }
@@ -48,7 +56,7 @@ ToolTip
 
             visible: false
             clip: true
-            radius: 30
+            radius: 30 * lastAppScaleSize
         }
         OpacityMask{
             id: mask
@@ -60,14 +68,13 @@ ToolTip
 
         Rectangle{
             anchors.fill: footerBlur
-            color: "#80000000"
-            radius: 30
+            color: Kirigami.JTheme.floatBackground
+            radius: 30 * lastAppScaleSize
         }
     }
     Text
     {
         id: toastText
-        // width:436
         anchors{
              horizontalCenter: parent.horizontalCenter
             verticalCenter: parent.verticalCenter
@@ -78,12 +85,12 @@ ToolTip
         }
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        wrapMode: Text.WordWrap//WrapAnywhere
+        wrapMode: Text.WordWrap
         text: ""
         font
         {
             pixelSize: defaultFontSize
         }
-        color: "white"
+        color: Kirigami.JTheme.majorForeground
     }
 }

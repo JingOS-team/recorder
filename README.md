@@ -5,8 +5,8 @@
 - SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-# Jing-KRecorder <img src="logo.png" width="40"/>
-Jing-KRecorder is based on KRecorder [github](https://github.com/JingOS-team/jing-kclock/blob/master/TODO) , a beautifully designed jing-krecorder that conforms to the JingOS style and has a compatible `pad / desktop` experience.
+# Recorder <img src="logo.png" width="40"/>
+The application of recorder is based on KRecorder [github](https://github.com/JingOS-team/jing-kclock/blob/master/TODO) , a beautifully designed jing-krecorder that conforms to the JingOS style and has a compatible `pad / desktop` experience.
 
 ## Features
 * Record audio with a visualizer, and pausing functionality
@@ -21,8 +21,8 @@ Jing-KRecorder is based on KRecorder [github](https://github.com/JingOS-team/jin
 
 ## Links
 - Home: [www.jingos.com](http://www.jingos.com/)
-- Project page: https://github.com/JingOS-team/recorder
-- File issues: https://github.com/JingOS-team/recorder/issues
+- Project page: github.com/jingOS-team/krecorder
+- File issues: github.com/jingOS-team/krecorder/issues
 - Development channel: [www.jingos.com](http://www.jingos.com/)
 
 ## Installing

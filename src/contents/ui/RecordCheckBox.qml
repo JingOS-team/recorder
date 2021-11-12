@@ -1,7 +1,10 @@
+
 /*
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 
 import QtQuick 2.12
@@ -26,7 +29,6 @@ Controls.CheckBox{
             Image {
                 width: itemCheckBox.width
                 height: itemCheckBox.width
-//                sourceSize: Qt.size(44,44)
                 source: control.checked ? "qrc:/assets/checkbox_ok.png":imageSourceDefault
             }
         }

@@ -83,6 +83,8 @@ void SettingsModel::setAudioQuality(int audioQuality)
     int sampleRate = s.sampleRate();
     QString codec = s.codec();
     int count = s.channelCount();
+//    qDebug()<<"zhg - cpp---------audioSettings:"<<sampleRate << " codec:"<<codec
+//           <<" channelcount:"<< count;
     settings->setValue("General/audioQuality", audioQuality);
 
     emit audioQualityChanged();

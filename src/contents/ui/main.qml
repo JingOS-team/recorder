@@ -1,10 +1,9 @@
 /*
  * SPDX-FileCopyrightText: 2020 Jonah Brüchert <jbb@kaidan.im>
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * SPDX-FileCopyrightText: 2021 Zhang He Gang <zhanghegang@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-
 import QtQuick 2.12
 import org.kde.kirigami 2.15 as Kirigami
 import QtQuick.Controls 2.2 as QQC2
@@ -13,62 +12,67 @@ import KRecorder 1.0
 import QtQuick.Layouts 1.2
 import QtQml 2.14
 import "commonsize.js" as CSJ
+import jingos.display 1.0
 
 Kirigami.ApplicationWindow {
     id: root
 
-    property int defaultFontSize : 14//theme.defaultFont.pointSize
-    property var appScaleSize : width / 1920
-    property var lastAppScaleSize: width / 888
+    property int defaultFontSize: 14 * appFontSize
+    property var appScaleSize: JDisplay.dp(1.0)
+    property var lastAppScaleSize: JDisplay.dp(1.0)
+    property var appFontSize: JDisplay.sp(1.0)
+    property bool isDarkTheme: {
+        Kirigami.JTheme.colorScheme === "jingosDark"
+    }
 
-    width:  root.screen.width
+    width: root.screen.width
     height: root.screen.height
     pageStack.globalToolBar.style: Kirigami.ApplicationHeaderStyle.None
-    fastBlurMode:false
-    //    fastBlurOpacity:0.8
-    //black #1C1C21
-    //    fastBlurColor:"#E8EFFF"
+    fastBlurMode: false
+    color: Kirigami.JTheme.background
     onActiveChanged: {
-      RecordingModel.isForeground = active
+        RecordingModel.isForeground = active
     }
-    QQC2.StackView{
-        id:mainStackView
+    QQC2.StackView {
+        id: mainStackView
         anchors.fill: parent
         Component.onCompleted: {
             mainStackView.push(mainComponent)
         }
     }
 
-    Component{
-        id:mainComponent
+    Timer {
+        id: loadTimer
+        interval: 1
+        onTriggered: {
+            mainStackView.push(mainComponent)
+        }
+    }
+
+    Component {
+        id: mainComponent
         RecordMain {
             width: root.width
             height: root.height
             Component.onCompleted: {
+                console.log("  loadtime:: qml load end time:" + (new Date().getTime(
+                                                                     ) - MainStartTime))
             }
         }
     }
 
-    Component{
-        id:recordComponent
-        RecordPage{
-        }
+    Component {
+        id: recordComponent
+        RecordPage {}
     }
 
-    function pushRecordView(){
-        mainStackView.push(recordComponent)
+    function pushRecordView(playPagewidth) {
+        mainStackView.push(recordComponent, {
+                               "playPageWidth": playPagewidth
+                           })
     }
 
     function popView() {
         mainStackView.pop()
     }
-
-    //        pageStack.initialPage:RecordMain {
-    //        width: parent.width
-    //        height: parent.height
-    //        Component.onCompleted: {
-    //          console.log("  loadtime:: qml load end time:" + (new Date().getTime() - MainStartTime))
-    //        }
-    //    }
 }
-

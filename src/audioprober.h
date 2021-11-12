@@ -1,7 +1,7 @@
 /*
  * SPDX-FileCopyrightText: 2020 Jonah Brüchert <jbb@kaidan.im>
  * SPDX-FileCopyrightText: 2020 Devin Lin <espidev@gmail.com>
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * SPDX-FileCopyrightText: 2021 Zhang He Gang <zhanghegang@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */

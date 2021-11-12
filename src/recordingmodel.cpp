@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2020 Jonah Brüchert <jbb@kaidan.im>
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * SPDX-FileCopyrightText: 2021 Zhang He Gang <zhanghegang@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -16,11 +16,11 @@
 #include <QDebug>
 #include <QDir>
 #include <math.h>
-#include "taglib/tag.h"
-#include "taglib/fileref.h"
 #include "utils.h"
 #include <QException>
 #include <QDBusError>
+#define UNICODE
+#include <MediaInfo/MediaInfo.h>
 
 const QString DEF_RECORD_PREFIX = "clip";
 
@@ -65,7 +65,13 @@ QString Recording::recordDatePretty() const
     QDateTime currentDate =  QDateTime::currentDateTime();
     int dayoffset = m_recordDate.daysTo(currentDate);
     bool getLocalTimeIs24 = RecordingModel::instance()->is24HourFormat();
-    QString currentDayString = getLocalTimeIs24 ? "hh:mm" : (QLatin1String("hh:mm") + " AP");
+    QString apStr = m_recordDate.toString("AP");
+    QString currentDayString;
+    if(apStr == "AM" || apStr == "PM"){
+        currentDayString = getLocalTimeIs24 ? "hh:mm" : (QLatin1String("hh:mm") + " AP");
+    } else {
+        currentDayString = getLocalTimeIs24 ? "hh:mm" : "AP " +(QLatin1String("hh:mm"));
+    }
 
     if (dayoffset <= 7) {
         if (dayoffset < 1) {
@@ -93,7 +99,8 @@ QString Recording::recordingLengthPretty() const
     const int hours = m_recordingLength / 60 / 60;
     const int min = m_recordingLength / 60 - hours * 60;
     const int sec = m_recordingLength - min * 60 - hours * 60 * 60;
-    return QStringLiteral("%1:%2").arg(min, 2, 10, QLatin1Char('0')).arg(sec, 2, 10, QLatin1Char('0'));
+    QString hoursString = hours <= 0 ? "" : QStringLiteral("%1:").arg(hours, 2, 10, QLatin1Char('0'));
+    return hoursString + QStringLiteral("%1:%2").arg(min, 2, 10, QLatin1Char('0')).arg(sec, 2, 10, QLatin1Char('0'));
 }
 
 void Recording::setItemChecked(bool checked)
@@ -120,20 +127,20 @@ void Recording::setFileName(const QString &fileName)
 {
     if (fileName == "") {
         emit RecordingModel::instance()->showTipText(i18n("The file name cannot be empty."));
-    } else if (fileName != m_fileName) {
-        if ((fileName.indexOf("#") != -1)
+    } else if(fileName != m_fileName){
+        if ((fileName.indexOf(".") != -1)
                 || (fileName.indexOf("/") != -1)
-                || (fileName.indexOf("?") != -1))
+                )
         {
-            emit RecordingModel::instance()->showTipText(i18n("The file name cannot contain the following characters # / ?"));
-        } else if (fileName.startsWith("."))
+            emit RecordingModel::instance()->showTipText(i18n("The file name cannot contain the following characters . /"));
+        } else if(fileName.startsWith("."))
         {
             emit RecordingModel::instance()->showTipText(i18n("Cannot start with a symbol as a file name"));
         } else {
             QString newPath = m_filePath;
-            newPath.replace(QRegExp(m_fileName + "(?!.*" + m_fileName + ")"), fileName);
+            newPath.replace(m_fileName, fileName);
             QFileInfo check(newPath);
-            if (!check.exists()) {
+            if(!check.exists()){
                 QFile(m_filePath).rename(newPath);
                 m_fileName = fileName;
                 m_filePath = newPath;
@@ -218,7 +225,7 @@ RecordingTag::RecordingTag(QObject* parent,const QString &tagName, const QString
 
 RecordingTag::RecordingTag(const QJsonObject obj):
     m_tagName(obj["tagName"].toString())
-    , m_tagDate(obj["tagDate"].toString())
+  , m_tagDate(obj["tagDate"].toString())
 {
 }
 
@@ -252,17 +259,18 @@ void RecordingTag::setTagDate(const QString &date)
 
 RecordingModel::RecordingModel(QObject *parent) : QAbstractListModel(parent)
 {
-    m_settings = new QSettings(parent);
+    m_settings = new QSettings(parent);    
     bool isConnect = QDBusConnection::sessionBus().connect(QString(), QString("/org/kde/kcmshell_clock"),
-                     QString("org.kde.kcmshell_clock"), QString("clockUpdated"), this,
-                     SLOT(kcmClockUpdated()));
+            QString("org.kde.kcmshell_clock"), QString("clockUpdated"), this,
+            SLOT(kcmClockUpdated()));
+    qDebug()<<Q_FUNC_INFO << " ssisConnect:" << isConnect << QDBusConnection::sessionBus().lastError();
 
     m_currentLocalTime = getCurrentFormat();
     KSharedConfig::Ptr m_localeConfig = KSharedConfig::openConfig(QStringLiteral("kdeglobals"), KConfig::FullConfig);
     KConfigWatcher::Ptr m_localeConfigWatcher = KConfigWatcher::create(m_localeConfig);
     // watch for changes to locale config, to update 12/24 hour time
     bool dirWatcherConnect = connect(m_localeConfigWatcher.data(), &KConfigWatcher::configChanged,
-    this, [this](const KConfigGroup &group, const QByteArrayList &names) {
+                                     this, [this](const KConfigGroup &group, const QByteArrayList &names){
         if (group.name() == "Locale") {
             load();
         }
@@ -277,7 +285,6 @@ RecordingModel::RecordingModel(QObject *parent) : QAbstractListModel(parent)
 
 RecordingModel::~RecordingModel()
 {
-    save();
     delete m_settings;
     qDeleteAll(m_recordings);
 }
@@ -300,12 +307,19 @@ QJsonArray RecordingModel::loadFromFiles()
         QJsonArray array;
         foreach (QFileInfo file,files) {
             QString fileName = file.baseName();
-            //Qt::DateFormat::RFC2822Date
-            QString dateTime = file.birthTime().toString(dateFormatString);
+            QDateTime fileTime = file.birthTime();
+            QString dateTime = fileTime.isValid() ? fileTime.toString(dateFormatString) : file.lastModified().toString(dateFormatString);
+            qDebug()<<Q_FUNC_INFO << " birthTime: " << file.birthTime()<< " dateTime" <<dateTime;
+
             QString filePath = file.filePath();
             int size = file.size();
-            int duration =  getAudioTime(filePath);
-            if (duration == 0) {
+            bool isGetSuc = false;
+            int duration_mec =  getAudioTime(filePath);
+            int duration =  (duration_mec)/1000;
+            if(duration_mec > 0){
+                isGetSuc = true;
+            }
+            if(duration == 0 && !isGetSuc){
                 continue;
             }
             QJsonObject obj;
@@ -322,10 +336,14 @@ QJsonArray RecordingModel::loadFromFiles()
 
 qint64 RecordingModel::getAudioTime(const QString &filePath)
 {
-    TagLib::FileRef *fileRef  = new TagLib::FileRef(TagLib::FileName(filePath.toUtf8()));
-    if (fileRef->audioProperties()) {
-        int duration =  (fileRef->audioProperties()->lengthInMilliseconds() + 500)/1000;
-        return duration;
+    MediaInfoLib::MediaInfo MI;
+    if (MI.Open(filePath.toStdWString())) {
+        QString durationStr = QString::fromStdWString(MI.Get(MediaInfoLib::Stream_General, 0, __T("Duration")));
+        int durationInt = durationStr.toInt();
+        if (durationInt <= 0) {
+            durationInt = QString::fromStdWString(MI.Get(MediaInfoLib::Stream_Audio, 0, __T("Duration"), MediaInfoLib::Info_Text, MediaInfoLib::Info_Name)).toInt();
+        }
+        return durationInt;
     }
     return 0;
 }
@@ -348,10 +366,12 @@ int RecordingModel::getPcmDB( char *pcmdata, int size)
 
 void RecordingModel::recordDirChanged(const QString &path)
 {
-    if (!m_isForeground) {
+    bool isRecording =  AudioRecorder::instance()->isAudioRecording();
+    if(!m_isForeground && !isRecording){
         beginResetModel();
         load();
         endResetModel();
+        emit insertNewRecordFile();
     }
 }
 
@@ -364,7 +384,6 @@ void RecordingModel::load()
     }
 
     QJsonArray filesArray = loadFromFiles();
-
     if (filesArray.count() > 0) {
         std::transform(filesArray.begin(), filesArray.end(), std::back_inserter(m_recordings), [](const QJsonValue &rec) {
             return new Recording(rec.toObject());
@@ -389,15 +408,9 @@ bool RecordingModel::deleteAllCheck()
         Recording* item = m_recordings.at(i);
         if (item->itemChecked()) {
             deleteRecording(i);
-            //            needDeletedRecordings.insert(i,item);
             deleteAllCheck();
         }
     }
-    //    beginResetModel();
-    //    foreach (auto item,needDeletedRecordings) {
-    //        deleteRecordingByItem(item);
-    //    }
-    //    endResetModel();
     return true;
 }
 
@@ -408,6 +421,14 @@ Recording* RecordingModel::firstRecording()
         return NULL;
     }
     return m_recordings.first();
+}
+
+Recording* RecordingModel::getRecordingByIndex(int index)
+{
+    if(m_recordings.size() <= index){
+        return NULL;
+    }
+    return m_recordings.at(index);
 }
 
 int RecordingModel::getScreenWidth()
@@ -532,7 +553,6 @@ void RecordingModel::insertRecording(QString filePath, QString fileName, QDateTi
         emit insertNewRecordFile();
         rd->setTags(m_recordingTag);
         m_recordingTag.clear();
-        save();
     }
 
 }
@@ -543,8 +563,6 @@ void RecordingModel::deleteRecording(const int index)
     beginRemoveRows({}, index, index);
     m_recordings.removeAt(index);
     endRemoveRows();
-
-    save();
 }
 
 void RecordingModel:: addTags(QString tagName,QString tagDate)

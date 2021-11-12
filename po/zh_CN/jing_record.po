@@ -83,8 +83,8 @@ msgstr "文件名已经被使用，请重新命名"
 msgid "New Recordings"
 msgstr "新录音"
 
-msgid "The file name cannot contain the following characters # / ?"
-msgstr "文件名不能包含以下字符 #/？"
+msgid "The file name cannot contain the following characters . /"
+msgstr "文件名不能包含以下字符 ./"
 
 msgid "Cannot start with a symbol as a file name"
 msgstr "文件名不能以字符.开头"

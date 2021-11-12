@@ -1,14 +1,16 @@
 
-
 /*
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.12
 import "commonsize.js" as CSJ
 import KRecorder 1.0
 import QtMultimedia 5.12
+import org.kde.kirigami 2.15 as Kirigami
 
 Rectangle {
     id: lineRect
@@ -17,9 +19,9 @@ Rectangle {
     property int lineFixed
     property int audioUiX
     signal lineMoved(var lineX, var isLeft, var movePt)
-    property int itemWidth: 6
-    property int itemMinHeight: 3
-    property int itemMaxHeight: 7
+    property int itemWidth: 6 * lastAppScaleSize
+    property int itemMinHeight: 3 * lastAppScaleSize
+    property int itemMaxHeight: 7 * lastAppScaleSize
     property int secondLines: 6
     property double currentLineX
     property var movePosition
@@ -65,8 +67,7 @@ Rectangle {
             id: timeLineTimer
 
             interval: 20
-            running: (isStartPlayRecord) ? AudioPlayer.state
-                                           == AudioPlayer.PlayingState : emitRect.isRecordPlay
+            running: root.active & (isStartPlayRecord ? AudioPlayer.state == AudioPlayer.PlayingState : emitRect.isRecordPlay)
             repeat: true
             onRunningChanged: {
                 if (!running && !isStartPlayRecord) {
@@ -109,7 +110,7 @@ Rectangle {
         }
 
         onMovementEnded: {
-            if(dateList.contentX > currentMaxContentX){
+            if (dateList.contentX > currentMaxContentX) {
                 dateList.contentX = currentMaxContentX
             } else {
                 movePosition = Math.round(
@@ -137,7 +138,7 @@ Rectangle {
             visible: timeLineIsVisible()
 
             function timeLineIsVisible() {
-                if(!timeLineTimer.running){
+                if (!timeLineTimer.running) {
                     return (model.index - startIndex < dateList.isVisibleIndex)
                             || (model.index - startIndex < dateList.contentX / itemWidth)
                             && (dateList.contentX < dateList.currentMaxContentX)
@@ -153,13 +154,13 @@ Rectangle {
                     horizontalCenter: timeLine.horizontalCenter
                     bottom: timeLine.bottom
                 }
-                width: 1
+                width: 1 * lastAppScaleSize
                 height: getHeight(index)
-                //black #FFFFFF
-                color: "#3C3F48"
+                color: Kirigami.JTheme.majorForeground
                 function getHeight(index) {
-                    var h = timeLine.startIndex > index ? 0 : ((index - timeLine.startIndex)
-                                                               % secondLines === 0 ? itemMaxHeight : itemMinHeight)
+                    var h = timeLine.startIndex
+                            > index ? 0 : ((index - timeLine.startIndex) % secondLines
+                                           === 0 ? itemMaxHeight : itemMinHeight)
                     return h
                 }
             }
@@ -178,12 +179,11 @@ Rectangle {
                     bottomMargin: 4 * lastAppScaleSize
                     horizontalCenter: timeLine.horizontalCenter
                 }
-                font.pixelSize: defaultFontSize - 5
+                font.pixelSize: defaultFontSize - 5 * appFontSize
                 opacity: 0.6
                 visible: (index - timeLine.startIndex) % secondLines == 0
                          && textStartIndex >= 0 && seconds % 2 == 0
-                //black #FFFFFF
-                color: "#3C3F48"
+                color: Kirigami.JTheme.majorForeground
                 text: (minutes >= 10 ? minutes : ("0" + minutes)) + ":"
                       + (seconds >= 10 ? seconds : ("0" + seconds))
             }

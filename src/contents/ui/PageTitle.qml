@@ -1,10 +1,10 @@
 
-
 /*
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.12
 import org.kde.kirigami 2.15
@@ -18,8 +18,8 @@ Item {
     property var titleText
     property bool isEditShow: false
     property var editTextContent: i18n("Edit")
-    property int skillHeight: 32 //* lastAppScaleSize//root.height * (CSJ.Left_View_Cancel_Height / CSJ.ScreenCurrentHeight)
-    property int checkboxHeight: 22 //* lastAppScaleSize//root.height * (CSJ.Left_View_Cancel_Height / CSJ.ScreenCurrentHeight)
+    property int skillHeight: 32 * lastAppScaleSize
+    property int checkboxHeight: 22 * lastAppScaleSize
     property var colorRow: "#00000000"
     property RecordCheckBox allCheckBox: itemCheckBox
 
@@ -29,7 +29,7 @@ Item {
     signal allChecked(var status)
 
     width: parent.width
-    height: 40
+    height: 40 * lastAppScaleSize
 
     Rectangle {
         id: checkboxHideRect
@@ -38,8 +38,7 @@ Item {
             left: parent.left
             top: parent.top
             right: parent.right
-            rightMargin: 50
-//            leftMargin: 25 * lastAppScaleSize//(root.width * CSJ.LeftView.ListItemMargin / CSJ.ScreenCurrentWidth) / 2 + 19
+            rightMargin: 50 * lastAppScaleSize
         }
         width: parent.width
         height: parent.height
@@ -65,13 +64,12 @@ Item {
             anchors {
                 bottom: parent.bottom
                 left: icon.right
-//                leftMargin: 21
                 verticalCenter: icon.verticalCenter
             }
             //black #FFFFFF
-            color: "#3C3F48"
+            color: JTheme.majorForeground //"#3C3F48"
             text: titleText
-            font.pixelSize: defaultFontSize + 11
+            font.pixelSize: defaultFontSize + 11 * appFontSize
             font.bold: true
         }
     }
@@ -79,15 +77,12 @@ Item {
     Rectangle {
         id: checkboxshowRect
 
-        property int immwidth: 20
+        property int immwidth: 20 * lastAppScaleSize
 
         anchors {
             left: parent.left
             right: parent.right
             top: parent.top
-//            rightMargin: (root.width * CSJ.LeftView.ListItemMargin
-//                          / CSJ.ScreenCurrentWidth) * 2 + 19
-//            leftMargin: 25 * lastAppScaleSize//(root.width * CSJ.LeftView.ListItemMargin / CSJ.ScreenCurrentWidth) / 2 + 19
         }
         width: parent.width
         height: parent.height
@@ -110,6 +105,29 @@ Item {
                 Layout.minimumWidth: (checkboxshowRect.width - checkboxshowRect.immwidth) / 3
                 color: "#00000000"
 
+                JIconButton {
+                    id: jicon
+                    color: JTheme.majorForeground
+                    anchors {
+                        left: itemCheckBox.left
+                        leftMargin: -4 * lastAppScaleSize
+                        verticalCenter: parent.verticalCenter
+                    }
+                    width: checkboxHeight + 6 * lastAppScaleSize
+                    height: checkboxHeight + 6 * lastAppScaleSize
+                    visible: leftAllView.itemSelectCount !== leftAllView.leftItemCount
+                    source: leftAllView.itemSelectCount !== leftAllView.leftItemCount
+                            && leftAllView.itemSelectCount
+                            > 0 ? "qrc:/assets/select_one.svg" : "qrc:/assets/checkbox_default.png"
+                    MouseArea {
+                        width: itemCheckBox.width + 10 * lastAppScaleSize
+                        height: itemCheckBox.height + 10 * lastAppScaleSize
+                        anchors.centerIn: jicon
+                        onClicked: {
+                            allChecked(!itemCheckBox.checked)
+                        }
+                    }
+                }
                 RecordCheckBox {
                     id: itemCheckBox
 
@@ -117,6 +135,7 @@ Item {
                         left: parent.left
                         verticalCenter: parent.verticalCenter
                     }
+                    visible: !jicon.visible
                     width: checkboxHeight
                     height: width
                     imageSourceDefault: leftAllView.itemSelectCount !== leftAllView.leftItemCount
@@ -125,8 +144,8 @@ Item {
 
                     MouseArea {
                         anchors.centerIn: parent
-                        width: itemCheckBox.width + 40
-                        height: itemCheckBox.height + 40
+                        width: itemCheckBox.width + 10 * lastAppScaleSize
+                        height: itemCheckBox.height + 10 * lastAppScaleSize
                         onClicked: {
                             allChecked(!itemCheckBox.checked)
                         }
@@ -137,31 +156,16 @@ Item {
 
                     text: editTextContent
                     anchors {
-                        bottom: itemCheckBox.bottom
+                        verticalCenter: itemCheckBox.verticalCenter
                         left: itemCheckBox.right
                         leftMargin: 5 * lastAppScaleSize
                     }
                     verticalAlignment: Text.AlignBottom
                     //black #FFFFFF
-                    color: "#3C3F48"
+                    color: JTheme.majorForeground //"#3C3F48"
                     font.pixelSize: defaultFontSize
                 }
             }
-
-//            Rectangle {
-//                color: colorRow
-//                Layout.fillWidth: true
-//                Layout.minimumHeight: checkboxHeight
-//                Layout.minimumWidth: (checkboxshowRect.width - checkboxshowRect.immwidth) / 4
-//                JIconButton {
-//                    id: foldersImage
-
-//                    width: height
-//                    height: checkboxHeight + 10
-//                    anchors.horizontalCenter: parent.horizontalCenter
-//                    source: "qrc:/assets/folders.png" //leftAllView.itemSelectCount <= 0 ? "qrc:/assets/folders.png" : "qrc:/assets/folders_select.png"
-//                }
-//            }
 
             Rectangle {
                 color: colorRow
@@ -178,9 +182,8 @@ Item {
                         right: parent.right
                         rightMargin: parent.width * 1 / 4
                     }
-                    opacity:leftAllView.itemSelectCount <= 0 ?  0.3 : 1.0
-                    //leftAllView.itemSelectCount <= 0 ? "qrc:/assets/delete_default.png" :
-                    source:  "qrc:/assets/delete_select.png"
+                    opacity: leftAllView.itemSelectCount <= 0 ? 0.3 : 1.0
+                    source: "qrc:/assets/delete_select.png"
                 }
                 MouseArea {
                     anchors.fill: parent

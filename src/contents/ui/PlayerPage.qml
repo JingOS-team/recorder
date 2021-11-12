@@ -1,10 +1,11 @@
+
+
 /*
  * SPDX-FileCopyrightText: 2020 Devin Lin <espidev@gmail.com>
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * SPDX-FileCopyrightText: 2021 Zhang He Gang <zhanghegang@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-
 import QtQuick 2.12
 import org.kde.kirigami 2.15 as Kirigami
 import QtQuick.Controls 2.2 as Controls
@@ -12,25 +13,24 @@ import QtQuick.Layouts 1.2
 import KRecorder 1.0
 import "commonsize.js" as CSJ
 
-Rectangle{
-    id:playPageRect
-    
-    property Recording recording:RecordingModel.firstRecording()
-    property PlayPageTitle ppTitle : playerPageTitle
+Rectangle {
+    id: playPageRect
 
+    property Recording recording: RecordingModel.firstRecording()
+    property PlayPageTitle ppTitle: playerPageTitle
 
     onRecordingChanged: {
         playVisualization.setSliderValue(0)
     }
 
     onVisibleChanged: {
-        playVisualization.playPageIsVisible = visible;
+        playVisualization.playPageIsVisible = visible
     }
 
     Connections {
         target: RecordingModel
 
-        onInsertNewRecordFile:{
+        onInsertNewRecordFile: {
             playPageRect.recording = RecordingModel.firstRecording()
         }
         function onError(error) {
@@ -38,67 +38,68 @@ Rectangle{
         }
     }
 
-    function setFileName(){
-        if(recording.fileName !== playerPageTitle.textChangeContent){
-            recording.fileName = playerPageTitle.textChangeContent
+    function setFileName() {
+        if (recording) {
+            if (recording.fileName !== playerPageTitle.textChangeContent) {
+                recording.fileName = playerPageTitle.textChangeContent
+            }
         }
     }
 
-    Rectangle{
-        id:playPageTop
+    Rectangle {
+        id: playPageTop
         width: parent.width
         height: playerPageTitle.height + playVisualization.height
         color: "transparent"
         visible: !nullLoader.active
 
-        PlayPageTitle{
-            id:playerPageTitle
+        PlayPageTitle {
+            id: playerPageTitle
 
-            anchors{
+            anchors {
                 top: parent.top
             }
             titleContent: recording.fileName
             dateContent: recording.recordDate
             lengthContent: recording.recordingLength
-            //AudioPlayer.state === AudioPlayer.StoppedState ? "00:00:00" ://AudioPlayer.position
-            currentDateContent: Utils.formatTime(Math.round(playVisualization.slideValue/1000)*1000)
+            currentDateContent: Utils.formatTime(
+                                    Math.floor(playVisualization.slideValue))
             onRenameClicked: {
-                if(isFileNameEdit){
+                if (isFileNameEdit) {
                     recording.fileName = newFileName
                 }
             }
         }
 
         Visualization {
-            id:playVisualization
+            id: playVisualization
 
-            anchors{
+            anchors {
                 left: palypageBottom.left
                 right: palypageBottom.right
                 top: playerPageTitle.bottom
-//                bottom: palypageBottom.top
             }
             width: parent.width
-            height: playPageRect.height- playerPageTitle.height - palypageBottom.height - 19 * appScaleSize
+            height: playPageRect.height - playerPageTitle.height
+                    - palypageBottom.height - 19 * lastAppScaleSize
             Layout.fillWidth: false
             isListMove: true
-            audiouiColor:"#FFAF0A"
-            centerLienColor:"#FF9500"
+            audiouiColor: "#FFAF0A"
+            centerLienColor: "#FF9500"
             showLine: false
-            showHorizontalLine:true
+            showHorizontalLine: true
             currentFliickableX: recording.recordingLength
-            maxBarHeight: height/2
+            maxBarHeight: height / 2
             animationIndex: AudioPlayer.prober.animationInde
             volumes: AudioPlayer.prober.volumesList
             isPlayPage: true
         }
-
     }
 
-    Component{
-        id:nullComponent
-        Rectangle{
-            id:nullPageView
+    Component {
+        id: nullComponent
+        Rectangle {
+            id: nullPageView
             width: playPageTop.width
             height: playPageTop.height
             color: "transparent"
@@ -110,34 +111,35 @@ Rectangle{
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
                 font.pixelSize: defaultFontSize
-                //black #4DFFFFFF
-                color: "#4D3C3F48"
+                color: Kirigami.JTheme.disableForeground
             }
-            Rectangle{
-                id:nullLine
+            Rectangle {
+                id: nullLine
                 anchors.bottom: parent.bottom
                 width: parent.width
-                height: 2
-                color: "#4D3C3F48"
+                height: 1
+                color: Kirigami.JTheme.disableForeground
             }
         }
     }
 
-    Loader{
-     id:nullLoader
-     sourceComponent: nullComponent
-     active: mainLeftView.leftItemCount <= 0
+    Loader {
+        id: nullLoader
+        sourceComponent: nullComponent
+        active: mainLeftView.leftItemCount <= 0
     }
-    PlayPageBottom{
-        id:palypageBottom
+    PlayPageBottom {
+        id: palypageBottom
         isPlayPage: true
         color: "#00000000"
-        defaultSource : playSource
+        defaultSource: playSource
         anchors.bottom: parent.bottom
         onPlayClicked: {
             AudioPlayer.stop()
-            root.pushRecordView()
-//            pageStack.layers.push("qrc:/RecordPage.qml",{currentVX:0});
+            AudioRecorder.mkdirPath()
+            root.pushRecordView(playPageTop.width)
+            ppTitle.renamePlayPageTitle(false)
+            setFileName()
         }
     }
 }

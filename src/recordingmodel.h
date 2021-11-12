@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2020 Jonah Brüchert <jbb@kaidan.im>
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * SPDX-FileCopyrightText: 2021 Zhang He Gang <zhanghegang@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -24,6 +24,7 @@
 #include <KConfigGroup>
 #include <QDBusConnection>
 #include <KConfigWatcher>
+#include "audiorecorder.h"
 
 class RecordingModel;
 static RecordingModel *s_recordingModel = nullptr;
@@ -148,11 +149,11 @@ public:
         return m_recordingTag;
     }
 
-    bool isForeground() {
+    bool isForeground(){
         return m_isForeground;
     }
 
-    void setForeground(bool isForeG) {
+    void setForeground(bool isForeG){
         m_isForeground = isForeG;
         emit foregroundChanged();
     }
@@ -175,6 +176,7 @@ public:
     Q_INVOKABLE void setAllItemCheck(bool state);
     Q_INVOKABLE bool deleteAllCheck();
     Q_INVOKABLE Recording* firstRecording();
+    Q_INVOKABLE Recording* getRecordingByIndex(int index);
     Q_INVOKABLE int getScreenWidth();
     Q_INVOKABLE int getScreenHeight();
     QJsonArray loadFromFiles();
@@ -194,6 +196,10 @@ public:
     Q_INVOKABLE void removeTags(int index);
     Q_INVOKABLE bool is24HourFormat();
     QString getCurrentFormat();
+    Q_INVOKABLE int getRecordFileCount(){
+        return m_recordings.size();
+    };
+
 public slots:
     void kcmClockUpdated();
 public:
@@ -217,6 +223,7 @@ signals:
     void recorderCheckedChange(bool checked);
     void showTipText(QString tipText);
     void foregroundChanged();
+    void quitApp();
 public slots:
     void recordDirChanged(const QString &path);
 

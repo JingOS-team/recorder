@@ -1,7 +1,7 @@
 /*
  * SPDX-FileCopyrightText: 2020 Jonah Brüchert <jbb@kaidan.im>
  * SPDX-FileCopyrightText: 2020 Devin Lin <espidev@gmail.com>
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * SPDX-FileCopyrightText: Zhang He Gang <zhanghegang@jingos.com>
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -30,8 +30,6 @@ AudioRecorder::AudioRecorder(QObject *parent) : QAudioRecorder(parent)
     emit audioCodecChanged();
 
     QQmlEngine::setObjectOwnership(m_audioProbe, QQmlEngine::CppOwnership);
-//    QString defaultName =  QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/" + getRecordingName("test");
-//    setOutputLocation(defaultName);
 
     // once the file is done writing, save recording to model
     connect(this, &QAudioRecorder::stateChanged, this, &AudioRecorder::handleStateChange);
@@ -73,10 +71,17 @@ void AudioRecorder::handleStateChange(QAudioRecorder::State state)
     } else if (state == QAudioRecorder::PausedState) {
         cachedDuration = duration();
     } else if ( state == QAudioRecorder::RecordingState) {
+        QDateTime currentDate = QDateTime::currentDateTime();
         bool getLocalTimeIs24 = RecordingModel::instance()->is24HourFormat();
-        QString currentDayString = getLocalTimeIs24 ? "hh:mm" : (QLatin1String("hh:mm") + " AP");
+        QString apStr = currentDate.toString("AP");
+        QString currentDayString;
+        if(apStr == "AM" || apStr == "PM"){
+            currentDayString = getLocalTimeIs24 ? "hh:mm" : (QLatin1String("hh:mm") + " AP");
+        } else {
+            currentDayString = getLocalTimeIs24 ? "hh:mm" : "AP " +(QLatin1String("hh:mm"));
+        }
 
-        m_currentTime = QDateTime::currentDateTime().toString(currentDayString);
+        m_currentTime = currentDate.toString(currentDayString);
         emit currentDateChanged();
     }
 }
@@ -90,9 +95,9 @@ bool AudioRecorder::setRecordingName(const QString &rName)
 
     // ignore if the file destination is the same as the one currently being written to
     QFileInfo check(updatedPath);
-    if (check.exists()) {
+    if(check.exists()){
         return true;
-    } else {
+    }else {
         recordingName = rName;
         return false;
     }
@@ -107,7 +112,7 @@ QString AudioRecorder::getRecordingName(QString dName)
 
     int cur = 1;
     QFileInfo check(updatedPath);
-    if (check.exists()) {
+    if(check.exists()){
         while (check.exists()) {
             updatedPath = QString("%1_%2%3").arg(path, QString::number(cur), suffix);
             check = QFileInfo(updatedPath);
@@ -115,9 +120,30 @@ QString AudioRecorder::getRecordingName(QString dName)
         }
         newFileName = QString("%1_%2").arg(dName, QString::number((cur != 1 ? (cur-1) : 1)));
     } else {
-        newFileName = dName;
+      newFileName = dName;
     }
+    recordingName = newFileName;
     return newFileName;
+}
+
+bool AudioRecorder::isAudioRecording()
+{
+    return state() == QAudioRecorder::RecordingState;
+}
+
+void AudioRecorder::stopRecording()
+{
+    qDebug()<< " recorder stop start";
+
+    qint64 startTime = QDateTime::currentMSecsSinceEpoch();
+
+    if(state() != QAudioRecorder::StoppedState){
+        renameCurrentRecording();
+        this->stop();
+    }
+    qint64 endTime = QDateTime::currentMSecsSinceEpoch();
+    qDebug()<< " recorder stop end" << (endTime - startTime);
+
 }
 
 void AudioRecorder::renameCurrentRecording()
@@ -151,9 +177,10 @@ void AudioRecorder::renameCurrentRecording()
     }
 }
 
-QString AudioRecorder::getFilePath()
+QString AudioRecorder::getFilePath(bool isTimeout)
 {
     QString filePath = outputLocationPath().toString();
+    qDebug()<< Q_FUNC_INFO << " filePath:" << filePath;
     bool isExists = QFile::exists(filePath);
     if (isExists) {
         QStringList spl = outputLocationPath().fileName().split(".");
@@ -161,30 +188,29 @@ QString AudioRecorder::getFilePath()
         if (outputLocationPath().toString() != "") {
             setOutputLocation(outputLocationPath());
         }
-        recordPlayPath = QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/.recordPlay"+ suffix;
-//        QString   cFilePath = QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/copyPlay"+ suffix;
-
-        if ( QFile::exists(recordPlayPath)) {
-            QFile::remove(recordPlayPath);
-//            QFile::remove(cFilePath);
-        }
-        QFile newFile(recordPlayPath);
-        if (newFile.open(QIODevice::ReadWrite)) {
-            QProcess *p2 = new QProcess();
-            int result = p2->execute("cp "+ filePath + " " + recordPlayPath);
-            if (result == 0) {
-                int size = newFile.size();
-                int NUMBER_OF_SAMPLES = (size-44)/2;
-                FILE * file;
-                file = fopen(recordPlayPath.toUtf8(), "r+");
-                waveFormatHeader_t * wh = stereo16bit44khzWaveHeaderForLength(NUMBER_OF_SAMPLES);
-                int seekResult =  fseek(file,0,SEEK_SET);
-                writeWaveHeaderToFile(wh, file);
-                free(wh);
-                fclose(file);
-
+        if (!isTimeout) {
+            recordPlayPath = QStandardPaths::writableLocation(QStandardPaths::MusicLocation) + "/.recordPlay"+ suffix;
+            if ( QFile::exists(recordPlayPath)) {
+                QFile::remove(recordPlayPath);
             }
-            return recordPlayPath;
+            QFile newFile(recordPlayPath);
+            if (newFile.open(QIODevice::ReadWrite)) {
+                QProcess *p2 = new QProcess();
+                int result = p2->execute("cp "+ filePath + " " + recordPlayPath);
+                if (result == 0) {
+                    int size = newFile.size();
+                    int NUMBER_OF_SAMPLES = (size-44)/2;
+                    FILE * file;
+                    file = fopen(recordPlayPath.toUtf8(), "r+");
+                    waveFormatHeader_t * wh = stereo16bit44khzWaveHeaderForLength(NUMBER_OF_SAMPLES);
+                    int seekResult =  fseek(file,0,SEEK_SET);
+                    writeWaveHeaderToFile(wh, file);
+                    free(wh);
+                    fclose(file);
+
+                }
+                return recordPlayPath;
+            }
         }
     }
     return "";
@@ -200,11 +226,21 @@ bool AudioRecorder::deleteFilePath() {
     return false;
 }
 
+void AudioRecorder::mkdirPath()
+{
+    QDir cameraDir(QStandardPaths::writableLocation(QStandardPaths::MusicLocation));
+    bool isExists = cameraDir.exists();
+    if(!isExists){
+        bool isMkPath = cameraDir.mkpath(QStandardPaths::writableLocation(QStandardPaths::MusicLocation));
+        qDebug()<<Q_FUNC_INFO<<":isMkPath::"<<isMkPath ;
+    }
+}
+
 void AudioRecorder::saveRecording()
 {
     // get file name from path
     QStringList spl = savedPath.split("/");
     QString fileName = spl.at(spl.size()-1).split(".")[0];
 
-    RecordingModel::instance()->insertRecording(savedPath, fileName, QDateTime::currentDateTime(), (cachedDuration + 500) / 1000);
+    RecordingModel::instance()->insertRecording(savedPath, fileName, QDateTime::currentDateTime(), (cachedDuration) / 1000);
 }

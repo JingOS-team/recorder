@@ -1,12 +1,13 @@
 /*
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 
-
 import QtQuick 2.12
-import org.kde.kirigami 2.12 as Kirigami
+import org.kde.kirigami 2.15 as Kirigami
 import QtQuick.Controls 2.2 as Controls
 import QtQuick.Layouts 1.2
 import KRecorder 1.0
@@ -140,16 +141,16 @@ Rectangle {
      visible: leftItemCount <= 0
      width: nullTipText.contentWidth
      height: nullImage.height + nullTipText.height
-     Image {
+     Kirigami.Icon {
          id: nullImage
 
          anchors{
              horizontalCenter: nullTipText.horizontalCenter
          }
          width: height
-         height: 60 //* lastAppScaleSize
-//         sourceSize: Qt.size(width,height)
+         height: 60 * lastAppScaleSize
          source: "qrc:/assets/null_recorderfile.png"
+         color:Kirigami.JTheme.majorForeground
      }
      Text {
          id: nullTipText
@@ -162,30 +163,8 @@ Rectangle {
          wrapMode: Text.WordWrap
          horizontalAlignment: Text.AlignHCenter
          font.pixelSize: defaultFontSize
-         //black #4DFFFFFF
-         color: "#4D3C3F48"
+         color: Kirigami.JTheme.disableForeground//"#4D3C3F48"
      }
     }
-
-//    Image {
-//        id: bottomImage
-
-//        anchors{
-//            horizontalCenter: parent.horizontalCenter
-//            bottom: parent.bottom
-//            margins: parent.height * (CSJ.LeftView.left_bottom_parent_margin/CSJ.ScreenCurrentHeight)
-//        }
-//        width: height
-//        height:parent.height *(CSJ.LeftView.left_bottom_record_image_height / CSJ.ScreenCurrentHeight)
-//        visible: false
-//        source: "qrc:/assets/record.png"
-
-//        MouseArea{
-//            anchors.fill: parent
-//            onClicked: {
-//                leftAllView.recordImageClicked()
-//            }
-//        }
-//    }
 
 }

@@ -1,13 +1,15 @@
-/*
- * SPDX-FileCopyrightText: 2021 Wang Rui <wangrui@jingos.com>
- *
- * SPDX-License-Identifier: GPL-3.0-or-later
- */
 
+/*
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
+ *
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
+ */
 import QtQuick 2.0
 import "commonsize.js" as CSJ
 import KRecorder 1.0
-import org.kde.kirigami 2.15
+import org.kde.kirigami 2.15 as Kirigami
 
 Rectangle {
     id:playpagebottom
@@ -28,52 +30,65 @@ Rectangle {
     height: parent.height * (CSJ.PlayPageView.playpage_bottom_height/CSJ.ScreenCurrentHeight)
     color: "transparent"
 
-    Rectangle{
-        color: "#E95B4E"
+
+
+    Item{
+        width:  parent.height * (CSJ.playPage_Bottom_middle_Image_height/ CSJ.PlayPageView.playpage_bottom_height) + 8 * lastAppScaleSize
         height: width
-        width:  parent.height * (CSJ.playPage_Bottom_middle_Image_height/ CSJ.PlayPageView.playpage_bottom_height)
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        radius: height/2
+        Rectangle{
+            color: "#E95B4E"
+            anchors.fill: parent
+            anchors.margins: 8 * lastAppScaleSize
+            radius: height/2
+            Image {
+                id: playPauseBase
 
-        Image {
-            id: playPauseBase
+                width: parent.height
+                height: width
+                anchors.centerIn: parent
+                visible: !isPlayPage
+                source: "qrc:/assets/record_base.png"
 
-            width: parent.height
-            height: width
-            anchors.centerIn: parent
-            visible: !isPlayPage
-            source: "qrc:/assets/record_base.png"
-
-            NumberAnimation {
-                running:isAnimImage
-                loops: Animation.Infinite
-                target: playPauseBase
-                from: 0
-                to: 360
-                property: "rotation"
-                duration: 1000
-            }
-        }
-
-        Image {
-            id: playPauseImage
-
-            width: playpagebottom.height * (CSJ.PlayPageView.playpage_bottom_play_pause_width/ CSJ.PlayPageView.playpage_bottom_height)
-            height: width
-            anchors.centerIn: parent
-            source: defaultSource
-        }
-
-
-        JMouseSolid{
-            onClicked:{
-                if(playPauseImage.source == playSource){
-                    playClicked()
-                }else{
-                    pauseClicked()
+                NumberAnimation {
+                    running:isAnimImage
+                    loops: Animation.Infinite
+                    target: playPauseBase
+                    from: 0
+                    to: 360
+                    property: "rotation"
+                    duration: 1000
                 }
             }
+
+            Image {
+                id: playPauseImage
+
+                width: playpagebottom.height * (CSJ.PlayPageView.playpage_bottom_play_pause_width/ CSJ.PlayPageView.playpage_bottom_height)
+                height: width
+                anchors.centerIn: parent
+                source: defaultSource
+            }
+
+            MouseArea{
+                id:playMouse
+                hoverEnabled: true
+                anchors.fill: parent
+                onClicked:{
+                    if(playPauseImage.source == playSource){
+                        playClicked()
+                    }else{
+                        pauseClicked()
+                    }
+                }
+            }
+        }
+
+        Rectangle{
+            anchors.fill: parent
+            radius: height/2
+            color: playMouse.containsMouse ? (playMouse.pressed ? Kirigami.JTheme.pressBackground : Kirigami.JTheme.hoverBackground ) : "transparent"
         }
     }
 
@@ -90,10 +105,10 @@ Rectangle {
         color: "#00000000"
         visible: !isPlayPage
 
-        JSolidButton {
+        Kirigami.JIconButton {
             id: saveImage
 
-            width: playpagebottom.height * (CSJ.playPage_Bottom_right_Image_height/ CSJ.PlayPageView.playpage_bottom_height)
+            width: playpagebottom.height * (CSJ.playPage_Bottom_right_Image_height/ CSJ.PlayPageView.playpage_bottom_height) + 5 * lastAppScaleSize
             height: width
             anchors.centerIn: parent
             source: "qrc:/assets/save.png"
